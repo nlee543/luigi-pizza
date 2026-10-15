@@ -1,9 +1,19 @@
-from sqlalchemy import Boolean, Integer, String, false
+from decimal import Decimal
+
+from sqlalchemy import Boolean, Integer, Numeric, String, false
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):
     pass
+
+
+class Pizza(Base):
+    __tablename__ = "pizzas"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
+    size: Mapped[str] = mapped_column(String, nullable=False)
+    price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
 
 
 class User(Base):

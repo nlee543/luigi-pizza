@@ -1,10 +1,12 @@
+from decimal import Decimal
+
 import pytest
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from models import Base, User
+from models import Base, Pizza, User
 
 
 @pytest.fixture
@@ -30,6 +32,27 @@ def add_user(engine):
             return user.id, user.admin, user.phone_number
 
     return create_user
+
+
+def test_pizza_generated_id_and_values(engine):
+    with Session(engine) as session:
+        pizza = Pizza(size="Small", price=Decimal("5.00"))
+        session.add(pizza)
+        session.commit()
+        session.refresh(pizza)
+        assert isinstance(pizza.id, int)
+        assert pizza.size == "Small"
+        assert pizza.price == Decimal("5.00")
+
+
+@pytest.mark.parametrize("missing_column", ["size", "price"])
+def test_pizza_requires_size_and_price(engine, missing_column):
+    values = {"size": "Small", "price": Decimal("5.00")}
+    values.pop(missing_column)
+    with Session(engine) as session:
+        session.add(Pizza(**values))
+        with pytest.raises(IntegrityError):
+            session.commit()
 
 
 def test_generated_id_default_admin_and_optional_email(add_user):

@@ -22,6 +22,10 @@ Phone numbers are text to preserve leading zeros, plus signs, and formatting.
 Use `None` for missing emails; multiple users may omit email.
 SQLite stores booleans as 0/1; a CHECK constraint rejects other values.
 
+The `pizzas` table has an automatically assigned integer primary key (`id`),
+a required text `size`, and a required `price` mapped as `Numeric(10, 2)`.
+Use Python `Decimal` values for prices, for example `Decimal("5.00")`.
+
 Example:
 
 ```python
