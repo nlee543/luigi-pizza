@@ -26,6 +26,10 @@ The `pizzas` table has an automatically assigned integer primary key (`id`),
 a required text `size`, and a required `price` mapped as `Numeric(10, 2)`.
 Use Python `Decimal` values for prices, for example `Decimal("5.00")`.
 
+The `toppings` table has an automatically assigned integer primary key (`id`)
+and a required `name` of up to 50 characters. A CHECK constraint enforces the
+length limit because SQLite does not enforce `String(50)` by itself.
+
 Example:
 
 ```python

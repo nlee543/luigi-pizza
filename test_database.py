@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from models import Base, Pizza, User
+from models import Base, Pizza, Topping, User
 
 
 @pytest.fixture
@@ -32,6 +32,25 @@ def add_user(engine):
             return user.id, user.admin, user.phone_number
 
     return create_user
+
+
+@pytest.mark.parametrize("name", ["Pepperoni", "x" * 50])
+def test_topping_generated_id_and_name(engine, name):
+    with Session(engine) as session:
+        topping = Topping(name=name)
+        session.add(topping)
+        session.commit()
+        session.refresh(topping)
+        assert isinstance(topping.id, int)
+        assert topping.name == name
+
+
+@pytest.mark.parametrize("name", ["x" * 51, None])
+def test_topping_rejects_invalid_name(engine, name):
+    with Session(engine) as session:
+        session.add(Topping(name=name))
+        with pytest.raises(IntegrityError):
+            session.commit()
 
 
 def test_pizza_generated_id_and_values(engine):

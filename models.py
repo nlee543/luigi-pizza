@@ -1,11 +1,21 @@
 from decimal import Decimal
 
-from sqlalchemy import Boolean, Integer, Numeric, String, false
+from sqlalchemy import Boolean, CheckConstraint, Integer, Numeric, String, false
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):
     pass
+
+
+class Topping(Base):
+    __tablename__ = "toppings"
+    __table_args__ = (
+        CheckConstraint("length(name) <= 50", name="toppings_name_length"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(50), nullable=False)
 
 
 class Pizza(Base):
