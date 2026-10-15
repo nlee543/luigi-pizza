@@ -8,6 +8,20 @@ class Base(DeclarativeBase):
     pass
 
 
+class Inventory(Base):
+    __tablename__ = "inventory"
+    __table_args__ = (
+        CheckConstraint("quantity = round(quantity, 1)", name="inventory_quantity_scale"),
+        CheckConstraint("length(unit) <= 10", name="inventory_unit_length"),
+        CheckConstraint("length(name) <= 50", name="inventory_name_length"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
+    quantity: Mapped[Decimal] = mapped_column(Numeric(10, 1), nullable=False)
+    unit: Mapped[str] = mapped_column(String(10), nullable=False)
+    name: Mapped[str] = mapped_column(String(50), nullable=False)
+
+
 class Drink(Base):
     __tablename__ = "drinks"
     __table_args__ = (

@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from models import Base, Drink, Pizza, Topping, User
+from models import Base, Drink, Inventory, Pizza, Topping, User
 
 
 @pytest.fixture
@@ -17,6 +17,36 @@ def engine():
         yield engine
     finally:
         engine.dispose()
+
+
+@pytest.mark.parametrize("quantity", [Decimal("0"), Decimal("12"), Decimal("12.3")])
+def test_inventory_generated_id_and_values(engine, quantity):
+    with Session(engine) as session:
+        item = Inventory(quantity=quantity, unit="u" * 10, name="n" * 50)
+        session.add(item)
+        session.commit()
+        session.refresh(item)
+        assert isinstance(item.id, int)
+        assert item.quantity == quantity
+        assert item.unit == "u" * 10
+        assert item.name == "n" * 50
+
+
+@pytest.mark.parametrize("column, value", [
+    ("quantity", Decimal("12.34")),
+    ("quantity", None),
+    ("unit", "u" * 11),
+    ("unit", None),
+    ("name", "n" * 51),
+    ("name", None),
+])
+def test_inventory_rejects_invalid_values(engine, column, value):
+    values = {"quantity": Decimal("12.3"), "unit": "lbs", "name": "Flour"}
+    values[column] = value
+    with Session(engine) as session:
+        session.add(Inventory(**values))
+        with pytest.raises(IntegrityError):
+            session.commit()
 
 
 @pytest.fixture

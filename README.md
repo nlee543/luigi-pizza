@@ -35,6 +35,12 @@ a required `size` restricted to lowercase `small`, `medium`, or `large`,
 a required `price` mapped as `Numeric(10, 2)`, and a required `name` of up to
 50 characters. CHECK constraints enforce the size and name length limits.
 
+The `inventory` table has an automatically assigned integer primary key (`id`),
+a required `quantity` mapped as `Numeric(10, 1)`, a required `unit` of up to
+10 characters, and a required `name` of up to 50 characters. CHECK constraints
+enforce both text limits and reject quantities with more than one decimal place.
+Use `Decimal` for quantities, for example `Decimal("12.3")`.
+
 Example:
 
 ```python
