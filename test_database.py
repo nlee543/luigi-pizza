@@ -2,11 +2,11 @@ from decimal import Decimal
 
 import pytest
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from models import Base, Drink, Inventory, Pizza, Topping, User
+from models import Base, Drink, Inventory, Order, OrderDrink, Pizza, Topping, User
 
 
 @pytest.fixture
@@ -68,13 +68,14 @@ def add_user(engine):
 def test_drink_generated_id_and_values(engine, size):
     with Session(engine) as session:
         drink = Drink(size=size, price=Decimal("1.25"), name="x" * 50)
-        session.add(drink)
+        order = Order(order_drinks=[OrderDrink(drink=drink, quantity=1)])
+        session.add(order)
         session.commit()
-        session.refresh(drink)
         assert isinstance(drink.id, int)
         assert drink.size == size
         assert drink.price == Decimal("1.25")
         assert drink.name == "x" * 50
+        assert drink.orders == [order]
 
 
 @pytest.mark.parametrize("column, value", [
@@ -89,9 +90,107 @@ def test_drink_generated_id_and_values(engine, size):
 def test_drink_rejects_invalid_values(engine, column, value):
     values = {"size": "small", "price": Decimal("1.25"), "name": "Cola"}
     values[column] = value
+    with pytest.raises(IntegrityError):
+        with engine.begin() as connection:
+            connection.execute(Drink.__table__.insert().values(**values))
+
+
+@pytest.fixture
+def drink():
+    return Drink(size="small", price=Decimal("1.25"), name="Cola")
+
+
+@pytest.mark.parametrize("quantity", [1, 2, 10])
+def test_orders_drinks_generated_id_and_quantity(engine, drink, quantity):
     with Session(engine) as session:
-        session.add(Drink(**values))
-        with pytest.raises(IntegrityError):
+        link = OrderDrink(order=Order(), drink=drink, quantity=quantity)
+        session.add(link)
+        session.commit()
+        link_id = link.id
+    with Session(engine) as session:
+        link = session.get(OrderDrink, link_id)
+        assert isinstance(link.id, int)
+        assert link.quantity == quantity
+        assert link.order_id == link.order.id
+        assert link.drink_id == link.drink.id
+        assert link.order.order_drinks == [link]
+        assert link.drink.order_drinks == [link]
+        assert link.order.drinks == [link.drink]
+        assert link.drink.orders == [link.order]
+
+
+@pytest.mark.parametrize("quantity_values", [{}, {"quantity": None}], ids=["missing", "null"])
+def test_orders_drinks_requires_quantity(engine, drink, quantity_values):
+    with Session(engine) as session:
+        session.add(OrderDrink(order=Order(), drink=drink, **quantity_values))
+        with pytest.raises(IntegrityError, match="orders_drinks.quantity"):
+            session.commit()
+
+
+def test_orders_drinks_quantity_is_per_order(engine, drink):
+    with Session(engine) as session:
+        first = OrderDrink(order=Order(), drink=drink, quantity=2)
+        second = OrderDrink(order=Order(), drink=drink, quantity=5)
+        session.add_all([first, second])
+        session.commit()
+        first.quantity = 3
+        session.commit()
+        assert first.quantity == 3
+        assert second.quantity == 5
+        assert len(drink.orders) == 2
+
+
+def test_order_allows_no_drinks(engine):
+    with Session(engine) as session:
+        order = Order()
+        session.add(order)
+        session.commit()
+        assert order.order_drinks == []
+
+
+def test_drink_requires_order(engine, drink):
+    with Session(engine) as session:
+        session.add(drink)
+        with pytest.raises(ValueError, match="at least one order"):
+            session.commit()
+
+
+@pytest.mark.parametrize("operation", ["remove", "delete_link", "delete_order"])
+def test_cannot_remove_last_drink_order(engine, drink, operation):
+    with Session(engine) as session:
+        link = OrderDrink(order=Order(), drink=drink, quantity=1)
+        session.add(link)
+        session.commit()
+        if operation == "remove":
+            link.order.order_drinks.remove(link)
+        elif operation == "delete_link":
+            session.delete(link)
+        else:
+            session.delete(link.order)
+        with pytest.raises(ValueError, match="at least one order"):
+            session.commit()
+
+
+def test_removing_link_preserves_shared_drink(engine, drink):
+    with Session(engine) as session:
+        first = OrderDrink(order=Order(), drink=drink, quantity=2)
+        second = OrderDrink(order=Order(), drink=drink, quantity=5)
+        session.add_all([first, second])
+        session.commit()
+        first.order.order_drinks.remove(first)
+        session.commit()
+        assert session.scalars(select(OrderDrink)).all() == [second]
+        assert drink.orders == [second.order]
+
+
+def test_duplicate_order_drink_rejected(engine, drink):
+    with Session(engine) as session:
+        order = Order(order_drinks=[
+            OrderDrink(drink=drink, quantity=1),
+            OrderDrink(drink=drink, quantity=2),
+        ])
+        session.add(order)
+        with pytest.raises(IntegrityError, match="UNIQUE"):
             session.commit()
 
 

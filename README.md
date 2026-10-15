@@ -35,6 +35,30 @@ a required `size` restricted to lowercase `small`, `medium`, or `large`,
 a required `price` mapped as `Numeric(10, 2)`, and a required `name` of up to
 50 characters. CHECK constraints enforce the size and name length limits.
 
+`OrderDrink` maps the `orders_drinks` table with an integer primary key `id`,
+required `order_id` and `drink_id` foreign keys, and a required integer `quantity`.
+Each order/drink pair is unique. Add and update entries through `order_drinks`:
+
+```python
+from decimal import Decimal
+from models import Drink, Order, OrderDrink
+
+with SessionLocal.begin() as session:
+    order = Order(order_drinks=[
+        OrderDrink(
+            drink=Drink(size="small", price=Decimal("1.25"), name="Cola"),
+            quantity=2,
+        ),
+    ])
+    session.add(order)
+```
+
+`Order.drinks` and `Drink.orders` are read-only convenience relationships;
+after editing association entries, expire or refresh these collections to
+reload them (committing expires them by default). Orders may have no drinks.
+ORM relationship validation requires each surviving drink to have at least
+one order; direct SQL and bulk operations bypass this validation.
+
 The `inventory` table has an automatically assigned integer primary key (`id`),
 a required `quantity` mapped as `Numeric(10, 1)`, a required `unit` of up to
 10 characters, and a required `name` of up to 50 characters. CHECK constraints
