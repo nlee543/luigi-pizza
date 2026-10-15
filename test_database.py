@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from models import Base, Pizza, Topping, User
+from models import Base, Drink, Pizza, Topping, User
 
 
 @pytest.fixture
@@ -32,6 +32,37 @@ def add_user(engine):
             return user.id, user.admin, user.phone_number
 
     return create_user
+
+
+@pytest.mark.parametrize("size", ["small", "medium", "large"])
+def test_drink_generated_id_and_values(engine, size):
+    with Session(engine) as session:
+        drink = Drink(size=size, price=Decimal("1.25"), name="x" * 50)
+        session.add(drink)
+        session.commit()
+        session.refresh(drink)
+        assert isinstance(drink.id, int)
+        assert drink.size == size
+        assert drink.price == Decimal("1.25")
+        assert drink.name == "x" * 50
+
+
+@pytest.mark.parametrize("column, value", [
+    ("size", "extra-large"),
+    ("size", "Small"),
+    ("size", ""),
+    ("size", None),
+    ("price", None),
+    ("name", None),
+    ("name", "x" * 51),
+])
+def test_drink_rejects_invalid_values(engine, column, value):
+    values = {"size": "small", "price": Decimal("1.25"), "name": "Cola"}
+    values[column] = value
+    with Session(engine) as session:
+        session.add(Drink(**values))
+        with pytest.raises(IntegrityError):
+            session.commit()
 
 
 @pytest.mark.parametrize("name", ["Pepperoni", "x" * 50])

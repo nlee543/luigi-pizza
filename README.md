@@ -30,6 +30,11 @@ The `toppings` table has an automatically assigned integer primary key (`id`)
 and a required `name` of up to 50 characters. A CHECK constraint enforces the
 length limit because SQLite does not enforce `String(50)` by itself.
 
+The `drinks` table has an automatically assigned integer primary key (`id`),
+a required `size` restricted to lowercase `small`, `medium`, or `large`,
+a required `price` mapped as `Numeric(10, 2)`, and a required `name` of up to
+50 characters. CHECK constraints enforce the size and name length limits.
+
 Example:
 
 ```python

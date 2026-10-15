@@ -8,6 +8,19 @@ class Base(DeclarativeBase):
     pass
 
 
+class Drink(Base):
+    __tablename__ = "drinks"
+    __table_args__ = (
+        CheckConstraint("size IN ('small', 'medium', 'large')", name="drinks_size"),
+        CheckConstraint("length(name) <= 50", name="drinks_name_length"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
+    size: Mapped[str] = mapped_column(String, nullable=False)
+    price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    name: Mapped[str] = mapped_column(String(50), nullable=False)
+
+
 class Topping(Base):
     __tablename__ = "toppings"
     __table_args__ = (
