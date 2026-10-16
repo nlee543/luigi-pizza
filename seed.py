@@ -25,8 +25,9 @@ CUSTOMER_NAMES = (
     "Finley King", "Sage Wright", "Charlie Scott", "Drew Adams",
 )
 TOPPING_NAMES = (
-    "Mozzarella", "Pepperoni", "Sausage", "Mushrooms",
-    "Onions", "Green peppers", "Black olives", "Basil",
+    "Mozzarella", "Pepperoni", "Sausage",
+    "Onions", "Green peppers", "Black olives",
+    "Jalapenos", "Beef", "Diced tomatoes",
 )
 
 
