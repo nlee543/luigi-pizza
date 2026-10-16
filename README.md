@@ -12,6 +12,22 @@ The database is saved as `luigi_pizza.db` beside `database.py`.
 
 Run the tests with `.venv/Scripts/python.exe -m pytest -v`.
 
+Populate an empty database with sample data:
+
+```powershell
+.venv/Scripts/python.exe seed.py
+```
+
+This creates 20 customers and 100 orders distributed among them, plus pizzas,
+drinks, toppings, inventory, and all association records. Every customer has
+at least one order. Random choices use a fixed seed for reproducibility.
+The script refuses to add data if any table already contains records.
+For an empty database created with the older schema, it adds the missing
+`orders.user_id` foreign key automatically.
+
+`Order.user` and `User.orders` link customers and orders through `orders.user_id`.
+The customer link is optional to preserve support for guest orders.
+
 Running initialization again preserves existing tables and data; it does not
 migrate existing schemas.
 
@@ -106,4 +122,61 @@ with SessionLocal.begin() as session:
         email="alex@example.com",
         dine_in_name="Alex",
     ))
+```
+
+## Sample SQL
+```sql
+WITH pizza_toppings AS (
+    SELECT
+        ot.order_pizza_id,
+        GROUP_CONCAT(t.name, ', ') AS toppings
+    FROM orders_toppings AS ot
+    JOIN toppings AS t ON t.id = ot.topping_id
+    GROUP BY ot.order_pizza_id
+),
+pizza_summary AS (
+    SELECT
+        op.order_id,
+        GROUP_CONCAT(
+            p.size || ' pizza (' ||
+            COALESCE(pt.toppings, 'no extra toppings') ||
+            ') - $' || PRINTF('%.2f', p.price),
+            '; '
+        ) AS pizzas,
+        SUM(p.price) AS pizza_total
+    FROM orders_pizzas AS op
+    JOIN pizzas AS p ON p.id = op.pizza_id
+    LEFT JOIN pizza_toppings AS pt ON pt.order_pizza_id = op.id
+    GROUP BY op.order_id
+),
+drink_summary AS (
+    SELECT
+        od.order_id,
+        GROUP_CONCAT(
+            od.quantity || ' x ' || d.size || ' ' || d.name ||
+            ' - $' || PRINTF('%.2f', d.price * od.quantity),
+            '; '
+        ) AS drinks,
+        SUM(d.price * od.quantity) AS drink_total
+    FROM orders_drinks AS od
+    JOIN drinks AS d ON d.id = od.drink_id
+    GROUP BY od.order_id
+)
+SELECT
+    o.id AS order_number,
+    COALESCE(u.name, 'Guest') AS customer,
+    COALESCE(u.phone_number, '') AS phone,
+    COALESCE(u.email, '') AS email,
+    COALESCE(u.address, '') AS address,
+    COALESCE(ps.pizzas, 'No pizzas') AS pizzas,
+    COALESCE(ds.drinks, 'No drinks') AS drinks,
+    PRINTF(
+        '$%.2f',
+        COALESCE(ps.pizza_total, 0) + COALESCE(ds.drink_total, 0)
+    ) AS order_total
+FROM orders AS o
+LEFT JOIN users AS u ON u.id = o.user_id
+LEFT JOIN pizza_summary AS ps ON ps.order_id = o.id
+LEFT JOIN drink_summary AS ds ON ds.order_id = o.id
+ORDER BY o.id;
 ```

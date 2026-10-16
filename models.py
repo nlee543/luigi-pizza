@@ -70,6 +70,8 @@ class Order(Base):
     __tablename__ = "orders"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    user: Mapped["User | None"] = relationship(back_populates="orders")
     order_drinks: Mapped[list[OrderDrink]] = relationship(
         back_populates="order", cascade="all, delete-orphan",
     )
@@ -205,6 +207,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    orders: Mapped[list[Order]] = relationship(back_populates="user")
     name: Mapped[str] = mapped_column(String, nullable=False)
     address: Mapped[str] = mapped_column(String, nullable=False)
     phone_number: Mapped[str] = mapped_column(String, nullable=False)
