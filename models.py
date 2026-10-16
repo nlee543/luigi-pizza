@@ -1,8 +1,9 @@
+from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import (
-    Boolean, CheckConstraint, ForeignKey, Integer, Numeric, String,
-    UniqueConstraint, false,
+    Boolean, CheckConstraint, DateTime, ForeignKey, Integer, Numeric, String,
+    UniqueConstraint, false, func,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -69,8 +70,20 @@ orders_toppings = OrderTopping.__table__
 
 class Order(Base):
     __tablename__ = "orders"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('order_received', 'preparing', 'out_for_delivery', "
+            "'ready_for_pickup', 'completed')", name="orders_status",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
+    status: Mapped[str] = mapped_column(
+        String, nullable=False, server_default="order_received",
+    )
+    order_time: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.current_timestamp(),
+    )
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     user: Mapped["User | None"] = relationship(back_populates="orders")
     order_drinks: Mapped[list[OrderDrink]] = relationship(

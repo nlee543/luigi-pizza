@@ -19,6 +19,37 @@ def engine():
         engine.dispose()
 
 
+def test_order_database_defaults_and_stable_time(engine):
+    with engine.begin() as connection:
+        connection.execute(text("INSERT INTO orders DEFAULT VALUES"))
+        row = connection.execute(text("SELECT status, order_time FROM orders")).one()
+        assert row.status == "order_received"
+        assert row.order_time == connection.scalar(text("SELECT CURRENT_TIMESTAMP"))
+        connection.execute(text("UPDATE orders SET status = 'preparing'"))
+        assert connection.scalar(text("SELECT order_time FROM orders")) == row.order_time
+
+
+@pytest.mark.parametrize("status", [
+    "order_received", "preparing", "out_for_delivery", "ready_for_pickup", "completed",
+])
+def test_order_allowed_statuses(engine, status):
+    with Session(engine) as session:
+        order = Order(status=status)
+        session.add(order)
+        session.commit()
+        assert order.status == status
+        assert order.order_time is not None
+
+
+@pytest.mark.parametrize("values", [
+    "'unknown', CURRENT_TIMESTAMP", "NULL, CURRENT_TIMESTAMP", "'completed', NULL",
+])
+def test_order_invalid_status_or_time_rejected(engine, values):
+    with engine.begin() as connection:
+        with pytest.raises(IntegrityError):
+            connection.execute(text(f"INSERT INTO orders (status, order_time) VALUES ({values})"))
+
+
 @pytest.mark.parametrize("quantity", [Decimal("0"), Decimal("12"), Decimal("12.3")])
 def test_inventory_generated_id_and_values(engine, quantity):
     with Session(engine) as session:

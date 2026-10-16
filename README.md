@@ -28,6 +28,20 @@ For an empty database created with the older schema, it adds the missing
 `Order.user` and `User.orders` link customers and orders through `orders.user_id`.
 The customer link is optional to preserve support for guest orders.
 
+Orders have a required `status`: `order_received`, `preparing`,
+`out_for_delivery`, `ready_for_pickup`, or `completed`. The database enforces
+these values and defaults new orders to `order_received`. Required `order_time`
+is assigned by SQLite using `CURRENT_TIMESTAMP` (UTC) when inserted; changing
+status does not change this timestamp. API responses expose both fields, with
+UTC timestamps marked `Z`. POST/PUT accept `status`; omitting it on PUT preserves
+the current status. `order_time` is read-only through the API.
+
+For an existing database, run `.venv\Scripts\python migrate_orders.py` before
+starting the API. This makes a timestamped SQLite backup, preserves order IDs
+and relationships, and assigns existing orders `completed` with the migration
+time (their original received times are unknown). Running it again is a no-op.
+New databases created with `database.py` already include the new columns.
+
 Running initialization again preserves existing tables and data; it does not
 migrate existing schemas.
 

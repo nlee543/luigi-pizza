@@ -1,5 +1,6 @@
 """Pizza ordering HTTP API. Run with: uvicorn api.main:app."""
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from decimal import Decimal
 import os
 from pathlib import Path
@@ -94,6 +95,7 @@ class PizzaLine(Schema):
 
 
 class OrderInput(Schema):
+    status: Literal["order_received", "preparing", "out_for_delivery", "ready_for_pickup", "completed"] = "order_received"
     user_id: ID | None = None
     drinks: list[DrinkLine] = Field(default_factory=list)
     pizzas: list[PizzaLine] = Field(default_factory=list)
@@ -111,6 +113,7 @@ class OrderInput(Schema):
 
 class OrderOutput(OrderInput):
     id: int
+    order_time: datetime
 
 
 def get_session(request: Request):
@@ -139,6 +142,7 @@ def commit(session):
 def order_output(order):
     return OrderOutput(
         id=order.id, user_id=order.user_id,
+        status=order.status, order_time=order.order_time.replace(tzinfo=timezone.utc),
         drinks=[DrinkLine(drink_id=line.drink_id, quantity=line.quantity) for line in order.order_drinks],
         pizzas=[PizzaLine(pizza_id=line.pizza_id, quantity=line.quantity,
                           topping_ids=[t.topping_id for t in line.order_toppings])
@@ -154,6 +158,8 @@ def set_order(session, order, data):
                [get_record(session, Topping, tid) for tid in line.topping_ids]) for line in data.pizzas]
     session.add(order)
     order.user = user
+    if "status" in data.model_fields_set:
+        order.status = data.status
     # Flush deletions before recreating links to avoid unique-pair conflicts.
     order.order_drinks.clear()
     order.order_pizzas.clear()

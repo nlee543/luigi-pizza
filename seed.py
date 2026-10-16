@@ -50,6 +50,10 @@ def seed_database(bind: Engine = engine) -> dict[str, int]:
             connection.execute(text(
                 "ALTER TABLE orders ADD COLUMN user_id INTEGER REFERENCES users(id)"
             ))
+        if not {"status", "order_time"} <= columns:
+            # Every table was checked above: rebuilding this empty table is safe.
+            Order.__table__.drop(connection)
+            Order.__table__.create(connection)
 
         with Session(bind=connection) as session:
             customers = [

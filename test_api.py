@@ -26,6 +26,22 @@ def post(client, resource, data=None):
     return response.json()
 
 
+def test_order_status_and_readonly_time(client):
+    drink = post(client, 'drinks')
+    body = {'drinks': [{'drink_id': drink['id']}]}
+    order = post(client, 'orders', body)
+    url = f"/orders/{order['id']}"
+    for status in ['preparing', 'out_for_delivery', 'ready_for_pickup', 'completed']:
+        response = client.put(url, json={**body, 'status': status})
+        assert response.status_code == 200
+        assert response.json()['status'] == status
+        assert response.json()['order_time'] == order['order_time']
+    assert client.put(url, json=body).json()['status'] == 'completed'
+    for extra in [{'status': 'invalid'}, {'status': None}, {'order_time': order['order_time']}]:
+        assert client.post('/orders', json={**body, **extra}).status_code == 422
+        assert client.put(url, json={**body, **extra}).status_code == 422
+
+
 @pytest.mark.parametrize("resource", PAYLOADS)
 def test_resource_crud(client, resource):
     assert client.get(f"/{resource}").json() == []
@@ -61,7 +77,8 @@ def test_order_crud(client, kind, topping_count):
         body['pizzas'] = [{"pizza_id": pizza['id'], "quantity": 1, "topping_ids": toppings}]
     created = post(client, "orders", body)
     url = f"/orders/{created['id']}"
-    assert created == {"id": created['id'], **body}
+    assert created == {"id": created['id'], **body, "status": "order_received", "order_time": created['order_time']}
+    assert created['order_time'].endswith('Z')
     assert client.get(url).json() == created
     assert client.get('/orders').json() == [created]
     # Replacing the same pizza exercises unique association keys and topping removal.
