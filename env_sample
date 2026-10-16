@@ -1,0 +1,2 @@
+# Create a .env file similar to the following
+CONNECTIONSTRING=sqlite:///file_name.db
