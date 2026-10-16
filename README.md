@@ -1,5 +1,84 @@
 # Luigi's Pizza database
 
+## Database diagram
+
+The tables and foreign keys defined in `models.py` are shown below. `PK` marks
+primary keys, `FK` marks foreign keys, and `UK` marks a unique column. All columns
+are required unless marked nullable. Relationships show database cardinality:
+`o|` means zero or one, `||` means exactly one, and `o{` means zero or many.
+
+```mermaid
+erDiagram
+    users |o..o{ orders : places
+    orders ||..o{ orders_drinks : contains
+    drinks ||..o{ orders_drinks : selected_as
+    orders ||..o{ orders_pizzas : contains
+    pizzas ||..o{ orders_pizzas : selected_as
+    orders_pizzas ||..o{ orders_toppings : has
+    toppings ||..o{ orders_toppings : selected_as
+
+    users {
+        Integer id PK
+        String name
+        String address
+        String phone_number
+        String email UK "nullable"
+        String dine_in_name
+        Boolean admin "default false"
+    }
+    orders {
+        Integer id PK
+        String status "default order_received"
+        DateTime order_time "default CURRENT_TIMESTAMP"
+        Integer user_id FK "nullable; guest orders allowed"
+    }
+    orders_drinks {
+        Integer id PK
+        Integer order_id FK
+        Integer drink_id FK
+        Integer quantity
+    }
+    drinks {
+        Integer id PK
+        String size "small, medium, or large"
+        Numeric price "precision 10, scale 2"
+        String name "max 50 characters"
+    }
+    orders_pizzas {
+        Integer id PK
+        Integer order_id FK
+        Integer pizza_id FK
+        Integer quantity
+    }
+    pizzas {
+        Integer id PK
+        String size
+        Numeric price "precision 10, scale 2"
+    }
+    orders_toppings {
+        Integer id PK
+        Integer order_pizza_id FK
+        Integer topping_id FK
+    }
+    toppings {
+        Integer id PK
+        String name "max 50 characters"
+    }
+    inventory {
+        Integer id PK
+        Numeric quantity "precision 10, scale 1"
+        String unit "max 10 characters"
+        String name "max 50 characters"
+    }
+```
+
+The association tables enforce composite uniqueness on
+`orders_drinks(order_id, drink_id)`, `orders_pizzas(order_id, pizza_id)`, and
+`orders_toppings(order_pizza_id, topping_id)`. Toppings attach to an order's pizza
+entry. Inventory has no foreign-key relationships to the other tables.
+
+## Setup
+
 Create the environment and initialize SQLite from PowerShell:
 
 ```powershell
