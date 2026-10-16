@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from models import Base, Drink, Inventory, Order, OrderDrink, Pizza, Topping, User
+from models import Base, Drink, Inventory, Order, OrderDrink, OrderPizza, Pizza, Topping, User
 
 
 @pytest.fixture
@@ -216,7 +216,7 @@ def test_topping_rejects_invalid_name(engine, name):
 def test_pizza_generated_id_and_values(engine):
     with Session(engine) as session:
         pizza = Pizza(size="Small", price=Decimal("5.00"))
-        session.add(pizza)
+        session.add(OrderPizza(order=Order(), pizza=pizza))
         session.commit()
         session.refresh(pizza)
         assert isinstance(pizza.id, int)
@@ -229,7 +229,7 @@ def test_pizza_requires_size_and_price(engine, missing_column):
     values = {"size": "Small", "price": Decimal("5.00")}
     values.pop(missing_column)
     with Session(engine) as session:
-        session.add(Pizza(**values))
+        session.add(OrderPizza(order=Order(), pizza=Pizza(**values)))
         with pytest.raises(IntegrityError):
             session.commit()
 
@@ -260,3 +260,98 @@ def test_database_rejects_invalid_admin(engine, add_user, invalid):
         with engine.begin() as connection:
             connection.execute(text("UPDATE users SET admin = :value WHERE id = :id"),
                                {"value": invalid, "id": user_id})
+
+
+@pytest.fixture
+def pizza():
+    return Pizza(size="Small", price=Decimal("5.00"))
+
+
+def test_order_allows_no_pizzas(engine):
+    with Session(engine) as session:
+        order = Order()
+        session.add(order)
+        session.commit()
+        assert order.order_pizzas == []
+
+
+def test_pizza_requires_order(engine, pizza):
+    with Session(engine) as session:
+        session.add(pizza)
+        with pytest.raises(ValueError, match="at least one order"):
+            session.commit()
+
+
+@pytest.mark.parametrize("operation", ["remove", "delete_link", "delete_order"])
+def test_cannot_remove_last_pizza_order(engine, pizza, operation):
+    with Session(engine) as session:
+        link = OrderPizza(order=Order(), pizza=pizza)
+        session.add(link)
+        session.commit()
+        if operation == "remove":
+            link.order.order_pizzas.remove(link)
+        elif operation == "delete_link":
+            session.delete(link)
+        else:
+            session.delete(link.order)
+        with pytest.raises(ValueError, match="at least one order"):
+            session.commit()
+
+
+def test_removing_link_preserves_shared_pizza(engine, pizza):
+    with Session(engine) as session:
+        first = OrderPizza(order=Order(), pizza=pizza)
+        second = OrderPizza(order=Order(), pizza=pizza)
+        session.add_all([first, second])
+        session.commit()
+        first.order.order_pizzas.remove(first)
+        session.commit()
+        assert session.scalars(select(OrderPizza)).all() == [second]
+        assert pizza.orders == [second.order]
+
+
+def test_duplicate_order_pizza_rejected(engine, pizza):
+    with Session(engine) as session:
+        order = Order(order_pizzas=[
+            OrderPizza(pizza=pizza),
+            OrderPizza(pizza=pizza),
+        ])
+        session.add(order)
+        with pytest.raises(IntegrityError, match="UNIQUE"):
+            session.commit()
+
+
+
+def test_orders_pizzas_many_to_many(engine, pizza):
+    with Session(engine) as session:
+        other_pizza = Pizza(size="Large", price=Decimal("10.00"))
+        first_order = Order(order_pizzas=[
+            OrderPizza(pizza=pizza), OrderPizza(pizza=other_pizza),
+        ])
+        second_order = Order(order_pizzas=[OrderPizza(pizza=pizza)])
+        session.add_all([first_order, second_order])
+        session.commit()
+        ids = first_order.id, second_order.id, pizza.id
+    with Session(engine) as session:
+        first = session.get(Order, ids[0])
+        second = session.get(Order, ids[1])
+        shared = session.get(Pizza, ids[2])
+        assert len(first.pizzas) == 2
+        assert second.pizzas == [shared]
+        assert set(shared.orders) == {first, second}
+        links = session.scalars(select(OrderPizza)).all()
+        assert len(links) == 3
+        assert len({link.id for link in links}) == 3
+        for link in links:
+            assert isinstance(link.id, int)
+            assert link.order_id == link.order.id
+            assert link.pizza_id == link.pizza.id
+
+
+@pytest.mark.parametrize("missing_column", ["order_id", "pizza_id"])
+def test_order_pizza_requires_both_foreign_keys(engine, missing_column):
+    values = {"order_id": 1, "pizza_id": 1}
+    values.pop(missing_column)
+    with engine.begin() as connection:
+        with pytest.raises(IntegrityError, match="NOT NULL"):
+            connection.execute(OrderPizza.__table__.insert().values(**values))

@@ -26,6 +26,19 @@ The `pizzas` table has an automatically assigned integer primary key (`id`),
 a required text `size`, and a required `price` mapped as `Numeric(10, 2)`.
 Use Python `Decimal` values for prices, for example `Decimal("5.00")`.
 
+`OrderPizza` maps `orders_pizzas` with an automatically assigned integer `id`
+and required `order_id` and `pizza_id` foreign keys. Each order/pizza pair is
+unique. Create entries with `OrderPizza(order=order, pizza=pizza)` or append
+them to `order.order_pizzas`. Both `Order.order_pizzas` and
+`Pizza.order_pizzas` expose the association objects. `Order.pizzas` and
+`Pizza.orders` are read-only convenience relationships that reload after
+expiration or commit.
+
+An order may have no pizzas or many pizzas. ORM relationship validation
+requires every surviving pizza to belong to at least one order, including
+when removing links or deleting orders. Direct SQL and bulk operations bypass
+this validation.
+
 The `toppings` table has an automatically assigned integer primary key (`id`)
 and a required `name` of up to 50 characters. A CHECK constraint enforces the
 length limit because SQLite does not enforce `String(50)` by itself.
