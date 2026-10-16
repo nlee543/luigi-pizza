@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from models import Base, Drink, Inventory, Order, OrderDrink, OrderPizza, Pizza, Topping, User
+from models import Base, Drink, Inventory, Order, OrderDrink, OrderPizza, OrderTopping, Pizza, Topping, User
 
 
 @pytest.fixture
@@ -355,3 +355,85 @@ def test_order_pizza_requires_both_foreign_keys(engine, missing_column):
     with engine.begin() as connection:
         with pytest.raises(IntegrityError, match="NOT NULL"):
             connection.execute(OrderPizza.__table__.insert().values(**values))
+
+
+@pytest.mark.parametrize("count", [0, 1, 3])
+def test_order_pizza_toppings(engine, pizza, count):
+    with Session(engine) as session:
+        item = OrderPizza(order=Order(), pizza=pizza, order_toppings=[
+            OrderTopping(topping=Topping(name=f"Topping {i}")) for i in range(count)
+        ])
+        session.add(item)
+        session.commit()
+        item_id = item.id
+    with Session(engine) as session:
+        item = session.get(OrderPizza, item_id)
+        assert len(item.toppings) == count
+        assert len(item.order_toppings) == count
+        assert len({link.id for link in item.order_toppings}) == count
+        for link in item.order_toppings:
+            assert isinstance(link.id, int)
+            assert link.order_pizza_id == item.id
+            assert link.topping_id == link.topping.id
+            assert link.topping.order_pizzas == [item]
+
+
+def test_toppings_are_specific_to_order_pizza(engine, pizza):
+    with Session(engine) as session:
+        shared = Topping(name="Cheese")
+        extra = Topping(name="Olives")
+        first = OrderPizza(order=Order(), pizza=pizza, order_toppings=[
+            OrderTopping(topping=shared), OrderTopping(topping=extra),
+        ])
+        second = OrderPizza(order=Order(), pizza=pizza, order_toppings=[
+            OrderTopping(topping=shared),
+        ])
+        session.add_all([first, second])
+        session.commit()
+        assert set(first.toppings) == {shared, extra}
+        assert second.toppings == [shared]
+        assert set(shared.order_pizzas) == {first, second}
+        first.order_toppings.clear()
+        session.commit()
+        assert first.toppings == []
+        assert second.toppings == [shared]
+        assert set(session.scalars(select(Topping))) == {shared, extra}
+
+
+@pytest.mark.parametrize("target", ["order_pizza", "topping"])
+def test_order_topping_cleanup(engine, pizza, target):
+    with Session(engine) as session:
+        topping = Topping(name="Cheese")
+        first = OrderPizza(order=Order(), pizza=pizza, order_toppings=[
+            OrderTopping(topping=topping),
+        ])
+        second = OrderPizza(order=Order(), pizza=pizza)
+        session.add_all([first, second])
+        session.commit()
+        session.delete(first if target == "order_pizza" else topping)
+        session.commit()
+        assert session.scalars(select(OrderTopping)).all() == []
+        assert session.get(Pizza, pizza.id) is pizza
+        if target == "order_pizza":
+            assert session.get(Topping, topping.id) is topping
+        else:
+            assert session.get(OrderPizza, first.id) is first
+
+
+def test_duplicate_order_topping_rejected(engine, pizza):
+    with Session(engine) as session:
+        topping = Topping(name="Cheese")
+        session.add(OrderPizza(order=Order(), pizza=pizza, order_toppings=[
+            OrderTopping(topping=topping), OrderTopping(topping=topping),
+        ]))
+        with pytest.raises(IntegrityError, match="UNIQUE"):
+            session.commit()
+
+
+@pytest.mark.parametrize("missing_column", ["order_pizza_id", "topping_id"])
+def test_order_topping_requires_both_foreign_keys(engine, missing_column):
+    values = {"order_pizza_id": 1, "topping_id": 1}
+    values.pop(missing_column)
+    with engine.begin() as connection:
+        with pytest.raises(IntegrityError, match="NOT NULL"):
+            connection.execute(OrderTopping.__table__.insert().values(**values))

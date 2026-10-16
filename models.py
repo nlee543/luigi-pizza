@@ -38,11 +38,32 @@ class OrderPizza(Base):
 
     order: Mapped["Order"] = relationship(back_populates="order_pizzas")
     pizza: Mapped["Pizza"] = relationship(back_populates="order_pizzas")
+    order_toppings: Mapped[list["OrderTopping"]] = relationship(
+        back_populates="order_pizza", cascade="all, delete-orphan",
+    )
+    toppings: Mapped[list["Topping"]] = relationship(
+        secondary="orders_toppings", viewonly=True,
+    )
+
+
+class OrderTopping(Base):
+    __tablename__ = "orders_toppings"
+    __table_args__ = (
+        UniqueConstraint("order_pizza_id", "topping_id", name="orders_toppings_unique_pair"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
+    order_pizza_id: Mapped[int] = mapped_column(ForeignKey("orders_pizzas.id"), nullable=False)
+    topping_id: Mapped[int] = mapped_column(ForeignKey("toppings.id"), nullable=False)
+
+    order_pizza: Mapped[OrderPizza] = relationship(back_populates="order_toppings")
+    topping: Mapped["Topping"] = relationship(back_populates="order_toppings")
 
 
 # Keep the table available for Core queries.
 orders_drinks = OrderDrink.__table__
 orders_pizzas = OrderPizza.__table__
+orders_toppings = OrderTopping.__table__
 
 
 class Order(Base):
@@ -131,6 +152,12 @@ class Topping(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
     name: Mapped[str] = mapped_column(String(50), nullable=False)
+    order_toppings: Mapped[list[OrderTopping]] = relationship(
+        back_populates="topping", cascade="all, delete-orphan",
+    )
+    order_pizzas: Mapped[list[OrderPizza]] = relationship(
+        secondary=orders_toppings, viewonly=True,
+    )
 
 
 class Pizza(Base):

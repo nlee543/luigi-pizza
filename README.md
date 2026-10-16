@@ -43,6 +43,19 @@ The `toppings` table has an automatically assigned integer primary key (`id`)
 and a required `name` of up to 50 characters. A CHECK constraint enforces the
 length limit because SQLite does not enforce `String(50)` by itself.
 
+`OrderTopping` maps `orders_toppings` with an automatically assigned integer
+primary key `id`, a required `order_pizza_id` referencing `orders_pizzas.id`,
+and a required `topping_id` referencing `toppings.id`. Each pair is unique.
+An order's pizza entry can have zero or many toppings, and a topping can be
+reused across entries. Toppings are specific to the order's pizza entry.
+
+Add a topping with
+`order_pizza.order_toppings.append(OrderTopping(topping=topping))`.
+Use `OrderPizza.order_toppings` and `Topping.order_toppings` to edit links;
+`OrderPizza.toppings` and `Topping.order_pizzas` are read-only convenience
+relationships that reload after expiration or commit. Removing links keeps
+the toppings themselves; ORM deletion of either endpoint cleans up its links.
+
 The `drinks` table has an automatically assigned integer primary key (`id`),
 a required `size` restricted to lowercase `small`, `medium`, or `large`,
 a required `price` mapped as `Numeric(10, 2)`, and a required `name` of up to
