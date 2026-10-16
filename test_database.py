@@ -172,15 +172,14 @@ def test_customer_orders_only_drinks(engine, add_user, drink):
         assert order.pizzas == []
 
 
-def test_drink_requires_order(engine, drink):
+def test_drink_allows_no_order(engine, drink):
     with Session(engine) as session:
         session.add(drink)
-        with pytest.raises(ValueError, match="at least one order"):
-            session.commit()
+        session.commit()
 
 
 @pytest.mark.parametrize("operation", ["remove", "delete_link", "delete_order"])
-def test_cannot_remove_last_drink_order(engine, drink, operation):
+def test_can_remove_last_drink_order(engine, drink, operation):
     with Session(engine) as session:
         link = OrderDrink(order=Order(), drink=drink, quantity=1)
         session.add(link)
@@ -191,8 +190,7 @@ def test_cannot_remove_last_drink_order(engine, drink, operation):
             session.delete(link)
         else:
             session.delete(link.order)
-        with pytest.raises(ValueError, match="at least one order"):
-            session.commit()
+        session.commit()
 
 
 def test_removing_link_preserves_shared_drink(engine, drink):
@@ -240,7 +238,7 @@ def test_topping_rejects_invalid_name(engine, name):
 def test_pizza_generated_id_and_values(engine):
     with Session(engine) as session:
         pizza = Pizza(size="Small", price=Decimal("5.00"))
-        session.add(OrderPizza(order=Order(), pizza=pizza))
+        session.add(OrderPizza(quantity=1, order=Order(), pizza=pizza))
         session.commit()
         session.refresh(pizza)
         assert isinstance(pizza.id, int)
@@ -253,7 +251,7 @@ def test_pizza_requires_size_and_price(engine, missing_column):
     values = {"size": "Small", "price": Decimal("5.00")}
     values.pop(missing_column)
     with Session(engine) as session:
-        session.add(OrderPizza(order=Order(), pizza=Pizza(**values)))
+        session.add(OrderPizza(quantity=1, order=Order(), pizza=Pizza(**values)))
         with pytest.raises(IntegrityError):
             session.commit()
 
@@ -304,7 +302,7 @@ def test_customer_orders_only_pizzas(engine, add_user, pizza):
     with Session(engine) as session:
         order = Order(
             user=session.get(User, user_id),
-            order_pizzas=[OrderPizza(pizza=pizza)],
+            order_pizzas=[OrderPizza(quantity=1, pizza=pizza)],
         )
         session.add(order)
         session.commit()
@@ -322,17 +320,16 @@ def test_customer_orders_only_pizzas(engine, add_user, pizza):
         assert order.drinks == []
 
 
-def test_pizza_requires_order(engine, pizza):
+def test_pizza_allows_no_order(engine, pizza):
     with Session(engine) as session:
         session.add(pizza)
-        with pytest.raises(ValueError, match="at least one order"):
-            session.commit()
+        session.commit()
 
 
 @pytest.mark.parametrize("operation", ["remove", "delete_link", "delete_order"])
-def test_cannot_remove_last_pizza_order(engine, pizza, operation):
+def test_can_remove_last_pizza_order(engine, pizza, operation):
     with Session(engine) as session:
-        link = OrderPizza(order=Order(), pizza=pizza)
+        link = OrderPizza(quantity=1, order=Order(), pizza=pizza)
         session.add(link)
         session.commit()
         if operation == "remove":
@@ -341,14 +338,13 @@ def test_cannot_remove_last_pizza_order(engine, pizza, operation):
             session.delete(link)
         else:
             session.delete(link.order)
-        with pytest.raises(ValueError, match="at least one order"):
-            session.commit()
+        session.commit()
 
 
 def test_removing_link_preserves_shared_pizza(engine, pizza):
     with Session(engine) as session:
-        first = OrderPizza(order=Order(), pizza=pizza)
-        second = OrderPizza(order=Order(), pizza=pizza)
+        first = OrderPizza(quantity=1, order=Order(), pizza=pizza)
+        second = OrderPizza(quantity=1, order=Order(), pizza=pizza)
         session.add_all([first, second])
         session.commit()
         first.order.order_pizzas.remove(first)
@@ -360,8 +356,8 @@ def test_removing_link_preserves_shared_pizza(engine, pizza):
 def test_duplicate_order_pizza_rejected(engine, pizza):
     with Session(engine) as session:
         order = Order(order_pizzas=[
-            OrderPizza(pizza=pizza),
-            OrderPizza(pizza=pizza),
+            OrderPizza(quantity=1, pizza=pizza),
+            OrderPizza(quantity=1, pizza=pizza),
         ])
         session.add(order)
         with pytest.raises(IntegrityError, match="UNIQUE"):
@@ -373,9 +369,9 @@ def test_orders_pizzas_many_to_many(engine, pizza):
     with Session(engine) as session:
         other_pizza = Pizza(size="Large", price=Decimal("10.00"))
         first_order = Order(order_pizzas=[
-            OrderPizza(pizza=pizza), OrderPizza(pizza=other_pizza),
+            OrderPizza(quantity=1, pizza=pizza), OrderPizza(quantity=1, pizza=other_pizza),
         ])
-        second_order = Order(order_pizzas=[OrderPizza(pizza=pizza)])
+        second_order = Order(order_pizzas=[OrderPizza(quantity=1, pizza=pizza)])
         session.add_all([first_order, second_order])
         session.commit()
         ids = first_order.id, second_order.id, pizza.id
@@ -407,7 +403,7 @@ def test_order_pizza_requires_both_foreign_keys(engine, missing_column):
 @pytest.mark.parametrize("count", [0, 1, 3])
 def test_order_pizza_toppings(engine, pizza, count):
     with Session(engine) as session:
-        item = OrderPizza(order=Order(), pizza=pizza, order_toppings=[
+        item = OrderPizza(quantity=1, order=Order(), pizza=pizza, order_toppings=[
             OrderTopping(topping=Topping(name=f"Topping {i}")) for i in range(count)
         ])
         session.add(item)
@@ -429,10 +425,10 @@ def test_toppings_are_specific_to_order_pizza(engine, pizza):
     with Session(engine) as session:
         shared = Topping(name="Cheese")
         extra = Topping(name="Olives")
-        first = OrderPizza(order=Order(), pizza=pizza, order_toppings=[
+        first = OrderPizza(quantity=1, order=Order(), pizza=pizza, order_toppings=[
             OrderTopping(topping=shared), OrderTopping(topping=extra),
         ])
-        second = OrderPizza(order=Order(), pizza=pizza, order_toppings=[
+        second = OrderPizza(quantity=1, order=Order(), pizza=pizza, order_toppings=[
             OrderTopping(topping=shared),
         ])
         session.add_all([first, second])
@@ -451,10 +447,10 @@ def test_toppings_are_specific_to_order_pizza(engine, pizza):
 def test_order_topping_cleanup(engine, pizza, target):
     with Session(engine) as session:
         topping = Topping(name="Cheese")
-        first = OrderPizza(order=Order(), pizza=pizza, order_toppings=[
+        first = OrderPizza(quantity=1, order=Order(), pizza=pizza, order_toppings=[
             OrderTopping(topping=topping),
         ])
-        second = OrderPizza(order=Order(), pizza=pizza)
+        second = OrderPizza(quantity=1, order=Order(), pizza=pizza)
         session.add_all([first, second])
         session.commit()
         session.delete(first if target == "order_pizza" else topping)
@@ -470,7 +466,7 @@ def test_order_topping_cleanup(engine, pizza, target):
 def test_duplicate_order_topping_rejected(engine, pizza):
     with Session(engine) as session:
         topping = Topping(name="Cheese")
-        session.add(OrderPizza(order=Order(), pizza=pizza, order_toppings=[
+        session.add(OrderPizza(quantity=1, order=Order(), pizza=pizza, order_toppings=[
             OrderTopping(topping=topping), OrderTopping(topping=topping),
         ]))
         with pytest.raises(IntegrityError, match="UNIQUE"):

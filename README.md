@@ -44,16 +44,14 @@ Use Python `Decimal` values for prices, for example `Decimal("5.00")`.
 
 `OrderPizza` maps `orders_pizzas` with an automatically assigned integer `id`
 and required `order_id` and `pizza_id` foreign keys. Each order/pizza pair is
-unique. Create entries with `OrderPizza(order=order, pizza=pizza)` or append
+unique. Create entries with `OrderPizza(order=order, pizza=pizza, quantity=1)` or append
 them to `order.order_pizzas`. Both `Order.order_pizzas` and
 `Pizza.order_pizzas` expose the association objects. `Order.pizzas` and
 `Pizza.orders` are read-only convenience relationships that reload after
 expiration or commit.
 
-An order may have no pizzas or many pizzas. ORM relationship validation
-requires every surviving pizza to belong to at least one order, including
-when removing links or deleting orders. Direct SQL and bulk operations bypass
-this validation.
+An order may have no pizzas or many pizzas. Pizzas are reusable menu items
+and can exist without an order. Each order/pizza link requires a quantity.
 
 The `toppings` table has an automatically assigned integer primary key (`id`)
 and a required `name` of up to 50 characters. A CHECK constraint enforces the
@@ -98,8 +96,7 @@ with SessionLocal.begin() as session:
 `Order.drinks` and `Drink.orders` are read-only convenience relationships;
 after editing association entries, expire or refresh these collections to
 reload them (committing expires them by default). Orders may have no drinks.
-ORM relationship validation requires each surviving drink to have at least
-one order; direct SQL and bulk operations bypass this validation.
+Drinks are reusable menu items and can exist without an order.
 
 The `inventory` table has an automatically assigned integer primary key (`id`),
 a required `quantity` mapped as `Numeric(10, 1)`, a required `unit` of up to
@@ -180,3 +177,59 @@ LEFT JOIN pizza_summary AS ps ON ps.order_id = o.id
 LEFT JOIN drink_summary AS ds ON ds.order_id = o.id
 ORDER BY o.id;
 ```
+
+
+## HTTP API
+
+Install dependencies and start from the project root:
+
+```powershell
+.venv/Scripts/python.exe -m pip install -r requirements.txt
+$env:CONNECTIONSTRING = "sqlite:///./luigi_pizza.db"
+.venv/Scripts/python.exe -m uvicorn api.main:app --reload
+```
+
+`CONNECTIONSTRING` is a SQLAlchemy SQLite URL. If omitted, the API uses
+`luigi_pizza.db` in the project root. Startup creates a missing database and
+tables, preserving existing data. This does not migrate older schemas.
+The parent directory of a configured database must already exist.
+Interactive API documentation is available at http://127.0.0.1:8000/docs.
+
+All six resources (`/users`, `/orders`, `/drinks`, `/pizzas`, `/toppings`,
+`/inventory`) support POST and GET on the collection, and GET, PUT, DELETE
+on `/{id}`. PUT replaces the complete resource; omitted optional fields reset
+to defaults. Lists accept `offset` (default 0) and `limit` (default 100, max 1000).
+POST returns 201, DELETE returns 204, missing records/references return 404,
+invalid input returns 422, and conflicts (including duplicate emails) return 409.
+Prices and inventory quantities are returned as decimal strings.
+
+Create menu items and optional users/toppings first, then POST an order:
+
+```json
+{
+  "user_id": 1,
+  "drinks": [{"drink_id": 1, "quantity": 2}],
+  "pizzas": [{"pizza_id": 1, "quantity": 1, "topping_ids": [1, 2]}]
+}
+```
+
+An order must contain drinks, pizzas, or both. Omit `user_id` for guest orders.
+Either item list and `topping_ids` may be omitted; toppings default to empty.
+Quantities default to 1 and must be positive integers. Each drink/pizza ID may
+appear once per order (use quantity for multiples); topping IDs must be unique
+within each pizza entry. Toppings belong to that order's pizza, not the menu item.
+Order creation and replacement are atomic, including reference validation.
+
+Deleting an order removes its association rows but retains menu items and toppings.
+Deleting a menu item or topping still referenced by orders returns 409.
+Deleting a user preserves their orders as guest orders. Inventory CRUD stores
+stock quantities; orders do not automatically deduct ingredients because the
+schema has no ingredient recipe mapping. These endpoints do not implement authentication.
+
+Run the API and database tests:
+
+```powershell
+.venv/Scripts/python.exe -m pytest -q
+```
+
+API tests use isolated temporary SQLite databases and do not modify production data.

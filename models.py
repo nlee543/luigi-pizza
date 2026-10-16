@@ -2,9 +2,9 @@ from decimal import Decimal
 
 from sqlalchemy import (
     Boolean, CheckConstraint, ForeignKey, Integer, Numeric, String,
-    UniqueConstraint, event, false, inspect,
+    UniqueConstraint, false,
 )
-from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
@@ -120,33 +120,6 @@ class Drink(Base):
     )
 
 
-@event.listens_for(Session, "before_flush")
-def validate_drink_orders(session, flush_context, instances):
-    """Require an order for each drink saved through ORM relationships."""
-    drinks = {
-        obj for obj in session.new.union(session.dirty) if isinstance(obj, Drink)
-    }
-    for obj in session.new.union(session.dirty).union(session.deleted):
-        if isinstance(obj, Order):
-            links = list(obj.order_drinks)
-            links.extend(inspect(obj).attrs.order_drinks.history.deleted)
-        elif isinstance(obj, OrderDrink):
-            links = [obj]
-            drinks.update(inspect(obj).attrs.drink.history.deleted)
-        else:
-            continue
-        drinks.update(link.drink for link in links if link.drink is not None)
-    for drink in drinks:
-        if drink not in session.deleted and not any(
-            link not in session.deleted
-            and link.order is not None
-            and link.order not in session.deleted
-            and link.drink is drink
-            for link in drink.order_drinks
-        ):
-            raise ValueError("A drink must belong to at least one order.")
-
-
 class Topping(Base):
     __tablename__ = "toppings"
     __table_args__ = (
@@ -175,33 +148,6 @@ class Pizza(Base):
     orders: Mapped[list[Order]] = relationship(
         secondary=orders_pizzas, viewonly=True,
     )
-
-
-@event.listens_for(Session, "before_flush")
-def validate_pizza_orders(session, flush_context, instances):
-    """Require an order for each pizza saved through ORM relationships."""
-    pizzas = {
-        obj for obj in session.new.union(session.dirty) if isinstance(obj, Pizza)
-    }
-    for obj in session.new.union(session.dirty).union(session.deleted):
-        if isinstance(obj, Order):
-            links = list(obj.order_pizzas)
-            links.extend(inspect(obj).attrs.order_pizzas.history.deleted)
-        elif isinstance(obj, OrderPizza):
-            links = [obj]
-            pizzas.update(inspect(obj).attrs.pizza.history.deleted)
-        else:
-            continue
-        pizzas.update(link.pizza for link in links if link.pizza is not None)
-    for pizza in pizzas:
-        if pizza not in session.deleted and not any(
-            link not in session.deleted
-            and link.order is not None
-            and link.order not in session.deleted
-            and link.pizza is pizza
-            for link in pizza.order_pizzas
-        ):
-            raise ValueError("A pizza must belong to at least one order.")
 
 
 class User(Base):

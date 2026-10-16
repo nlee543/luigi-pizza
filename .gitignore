@@ -6,3 +6,6 @@ __pycache__/
 *.db-journal
 *.db-shm
 *.db-wal
+
+.pytest_temp*/
+.env
