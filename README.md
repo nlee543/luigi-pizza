@@ -138,12 +138,12 @@ pizza_summary AS (
     SELECT
         op.order_id,
         GROUP_CONCAT(
-            p.size || ' pizza (' ||
+            op.quantity || ' x ' || p.size || ' pizza (' ||
             COALESCE(pt.toppings, 'no extra toppings') ||
-            ') - $' || PRINTF('%.2f', p.price),
+            ') - $' || PRINTF('%.2f', p.price * op.quantity),
             '; '
         ) AS pizzas,
-        SUM(p.price) AS pizza_total
+        SUM(p.price * op.quantity) AS pizza_total
     FROM orders_pizzas AS op
     JOIN pizzas AS p ON p.id = op.pizza_id
     LEFT JOIN pizza_toppings AS pt ON pt.order_pizza_id = op.id

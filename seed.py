@@ -104,6 +104,7 @@ def seed_database(bind: Engine = engine) -> dict[str, int]:
                             OrderTopping(topping=topping)
                             for topping in rng.sample(toppings, rng.randint(1, 4))
                         ],
+                        quantity=rng.randint(1, 3)
                     ))
                 # Cycle the first drink to guarantee every drink has an order.
                 first_drink = drinks[index % len(drinks)]

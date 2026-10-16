@@ -35,6 +35,7 @@ class OrderPizza(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
     order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"), nullable=False)
     pizza_id: Mapped[int] = mapped_column(ForeignKey("pizzas.id"), nullable=False)
+    quantity: Mapped[int] = mapped_column(Integer, nullable=False)
 
     order: Mapped["Order"] = relationship(back_populates="order_pizzas")
     pizza: Mapped["Pizza"] = relationship(back_populates="order_pizzas")
