@@ -64,6 +64,10 @@ def seed_database(bind: Engine = engine) -> dict[str, int]:
                 for i, name in enumerate(CUSTOMER_NAMES)
             ]
             toppings = [Topping(name=name) for name in TOPPING_NAMES]
+            pizzas = [
+                Pizza(size=size, price=Decimal(price))
+                for size, price in (("small", "5.00"), ("medium", "7.00"), ("large", "9.00"))
+            ]
             drinks = [
                 Drink(name=name, size=size, price=Decimal(price))
                 for name in ("Cola", "Lemonade", "Iced tea", "Sparkling water")
@@ -87,12 +91,15 @@ def seed_database(bind: Engine = engine) -> dict[str, int]:
             orders = []
             for index, customer in enumerate(owners):
                 order = Order(user=customer)
-                for _ in range(rng.randint(1, 3)):
-                    size, price = rng.choice((
-                        ("small", "8.00"), ("medium", "11.00"), ("large", "14.00"),
-                    ))
+                # Reuse the catalog, with each size appearing at most once per order.
+                first_pizza = pizzas[index % len(pizzas)]
+                selected_pizzas = [first_pizza] + rng.sample(
+                    [pizza for pizza in pizzas if pizza is not first_pizza],
+                    rng.randint(0, 2),
+                )
+                for pizza in selected_pizzas:
                     order.order_pizzas.append(OrderPizza(
-                        pizza=Pizza(size=size, price=Decimal(price)),
+                        pizza=pizza,
                         order_toppings=[
                             OrderTopping(topping=topping)
                             for topping in rng.sample(toppings, rng.randint(1, 4))
@@ -110,7 +117,7 @@ def seed_database(bind: Engine = engine) -> dict[str, int]:
                 ]
                 orders.append(order)
 
-            session.add_all(customers + toppings + drinks + inventory + orders)
+            session.add_all(customers + toppings + pizzas + drinks + inventory + orders)
             session.flush()
             counts = {
                 table.name: len(session.execute(select(table.c.id)).all())
