@@ -70,8 +70,8 @@ def seed_database(bind: Engine = engine) -> dict[str, int]:
             ]
             drinks = [
                 Drink(name=name, size=size, price=Decimal(price))
-                for name in ("Cola", "Lemonade", "Iced tea", "Sparkling water")
-                for size, price in (("small", "1.50"), ("medium", "2.00"), ("large", "2.50"))
+                for name in ("Coke", "Diet Coke", "Iced tea", "Coke Zero", "Sprite", "Dr. Pepper", "Mello Yello")
+                for size, price in (("small", "1.00"), ("medium", "2.00"), ("large", "3.00"))
             ]
             inventory = [
                 Inventory(name=name, quantity=Decimal(quantity), unit=unit)
