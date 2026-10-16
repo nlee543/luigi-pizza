@@ -148,6 +148,30 @@ def test_order_allows_no_drinks(engine):
         assert order.order_drinks == []
 
 
+def test_customer_orders_only_drinks(engine, add_user, drink):
+    user_id, _, _ = add_user()
+    with Session(engine) as session:
+        order = Order(
+            user=session.get(User, user_id),
+            order_drinks=[OrderDrink(drink=drink, quantity=2)],
+        )
+        session.add(order)
+        session.commit()
+        order_id, drink_id = order.id, drink.id
+
+    with Session(engine) as session:
+        order = session.get(Order, order_id)
+        customer = session.get(User, user_id)
+        assert order.user is customer
+        assert customer.orders == [order]
+        assert len(order.order_drinks) == 1
+        assert order.order_drinks[0].drink_id == drink_id
+        assert order.order_drinks[0].quantity == 2
+        assert order.drinks == [session.get(Drink, drink_id)]
+        assert order.order_pizzas == []
+        assert order.pizzas == []
+
+
 def test_drink_requires_order(engine, drink):
     with Session(engine) as session:
         session.add(drink)
@@ -273,6 +297,29 @@ def test_order_allows_no_pizzas(engine):
         session.add(order)
         session.commit()
         assert order.order_pizzas == []
+
+
+def test_customer_orders_only_pizzas(engine, add_user, pizza):
+    user_id, _, _ = add_user()
+    with Session(engine) as session:
+        order = Order(
+            user=session.get(User, user_id),
+            order_pizzas=[OrderPizza(pizza=pizza)],
+        )
+        session.add(order)
+        session.commit()
+        order_id, pizza_id = order.id, pizza.id
+
+    with Session(engine) as session:
+        order = session.get(Order, order_id)
+        customer = session.get(User, user_id)
+        assert order.user is customer
+        assert customer.orders == [order]
+        assert len(order.order_pizzas) == 1
+        assert order.order_pizzas[0].pizza_id == pizza_id
+        assert order.pizzas == [session.get(Pizza, pizza_id)]
+        assert order.order_drinks == []
+        assert order.drinks == []
 
 
 def test_pizza_requires_order(engine, pizza):
