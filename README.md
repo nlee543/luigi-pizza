@@ -1,5 +1,18 @@
 # Luigi's Pizza database
 
+## Package Python sources for deployment
+
+Run `python package_deployment.py` to create `deployment.zip` in the project
+directory. Use `python package_deployment.py --output path/to/release.zip` to
+choose a different destination. An existing ZIP at that destination is replaced.
+
+The archive contains `.py` files (including tests and the packaging script) and
+the project's root `requirements.txt`, preserving their directory structure.
+`.venv`, `__pycache__`, and `.git`
+directories are skipped at every depth, as are symbolic links. Empty directories
+and other non-Python files such as `.env` and databases are omitted.
+The script uses only Python's standard library and works from any working directory.
+
 ## Database diagram
 
 The tables and foreign keys defined in `models.py` are shown below. `PK` marks
