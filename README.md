@@ -23,6 +23,8 @@ are required unless marked nullable. Relationships show database cardinality:
 ```mermaid
 erDiagram
     users |o..o{ orders : places
+    users |o..o{ orders : enters
+    users ||..o{ login_sessions : authenticates
     orders ||..o{ orders_drinks : contains
     drinks ||..o{ orders_drinks : selected_as
     orders ||..o{ orders_pizzas : contains
@@ -37,13 +39,26 @@ erDiagram
         String phone_number
         String email UK "nullable"
         String dine_in_name
-        Boolean admin "default false"
+        String role "customer, staff, admin"
+        String password_hash "nullable; unprovisioned profile"
+        Boolean must_change_password "default false"
+        Boolean active "default true"
     }
     orders {
         Integer id PK
         String status "default order_received"
         DateTime order_time "default CURRENT_TIMESTAMP"
-        Integer user_id FK "nullable; guest orders allowed"
+        Integer user_id FK "nullable for historical records only"
+        Integer created_by_user_id FK "nullable for historical records only"
+    }
+    login_sessions {
+        Integer id PK
+        String token_hash UK
+        Integer user_id FK
+        String csrf_token
+        DateTime created_at
+        DateTime last_seen_at
+        DateTime expires_at
     }
     orders_drinks {
         Integer id PK
@@ -118,7 +133,8 @@ For an empty database created with the older schema, it adds the missing
 `orders.user_id` foreign key automatically.
 
 `Order.user` and `User.orders` link customers and orders through `orders.user_id`.
-The customer link is optional to preserve support for guest orders.
+The database permits missing customer/creator links for historical records.
+All new API orders require a registered customer and record the submitting user.
 
 Orders have a required `status`: `order_received`, `preparing`,
 `out_for_delivery`, `ready_for_pickup`, or `completed`. The database enforces
@@ -139,10 +155,12 @@ migrate existing schemas.
 
 The `users` table has an automatically assigned integer primary key (`id`),
 required text fields (`name`, `address`, `phone_number`, `dine_in_name`),
-an optional unique `email`, and a required boolean `admin` defaulting to false.
+an optional unique `email`, and a `role` constrained to `customer`, `staff`, or `admin`.
+New API registrations require an email and password; emails are trimmed and lowercased.
+Nullable email/password fields preserve old profiles, which cannot log in until provisioned.
 Phone numbers are text to preserve leading zeros, plus signs, and formatting.
-Use `None` for missing emails; multiple users may omit email.
-SQLite stores booleans as 0/1; a CHECK constraint rejects other values.
+Seeded customers have no password and cannot log in until explicitly provisioned.
+The API never returns password hashes or accepts roles during customer registration.
 
 The `pizzas` table has an automatically assigned integer primary key (`id`),
 a required text `size`, and a required `price` mapped as `Numeric(10, 2)`.
@@ -285,57 +303,162 @@ ORDER BY o.id;
 ```
 
 
-## HTTP API
+## HTTP API and session authentication
 
-Install dependencies and start from the project root:
+Install dependencies and run from the project root. For an **existing database**, stop
+any running API process and migrate it first (this creates a timestamped backup):
 
 ```powershell
 .venv/Scripts/python.exe -m pip install -r requirements.txt
+.venv/Scripts/python.exe migrate_auth.py
+# For another SQLite file: python migrate_auth.py C:/path/to/your.db
+```
+
+Very old databases need `migrate_orders.py` first. New databases need no migration;
+startup creates their tables. The authentication migration preserves customer IDs,
+order history, and former admin roles. Historical order creators remain unknown (`null`).
+Existing profiles are not given shared/default passwords. Case-insensitive duplicate
+emails must be resolved before migration. Your existing database is not migrated merely
+by updating the source files.
+
+Provision the first administrator using a local command (password is prompted privately):
+
+```powershell
+.venv/Scripts/python.exe manage_account.py --email admin@example.com --role admin --name "Restaurant admin"
+# For an existing profile, explicitly add --existing to set/reset its credentials.
+# To create staff, use --role staff. All provisioned passwords must be changed on login.
+```
+
+This command honors `CONNECTIONSTRING`, defaulting to `luigi_pizza.db`. Run the migration
+first for an existing database. `--existing` also revokes all sessions and sets the supplied
+role; use this local administrative tool only for accounts you intend to provision/reset.
+There are no built-in credentials. Passwords must contain 12-128 characters and use Argon2id.
+
+Start the local HTTP server:
+
+```powershell
 $env:CONNECTIONSTRING = "sqlite:///./luigi_pizza.db"
+$env:COOKIE_SECURE = "false" # Local HTTP only; defaults to true for HTTPS.
+$env:APP_ORIGIN = "http://127.0.0.1:8000"
 .venv/Scripts/python.exe -m uvicorn api.main:app --reload
 ```
 
-`CONNECTIONSTRING` is a SQLAlchemy SQLite URL. If omitted, the API uses
-`luigi_pizza.db` in the project root. Startup creates a missing database and
-tables, preserving existing data. This does not migrate older schemas.
-The parent directory of a configured database must already exist.
-Interactive API documentation is available at http://127.0.0.1:8000/docs.
+Environment files are examples; the application does not automatically load `.env`.
+`CONNECTIONSTRING` must be a SQLite SQLAlchemy URL. The database parent directory must
+already exist. Serve the eventual UI on the same origin, and set `APP_ORIGIN` to that
+exact origin (scheme, host, and port). CORS is not enabled. Use `COOKIE_SECURE=true`
+and HTTPS outside local development.
 
-All six resources (`/users`, `/orders`, `/drinks`, `/pizzas`, `/toppings`,
-`/inventory`) support POST and GET on the collection, and GET, PUT, DELETE
-on `/{id}`. PUT replaces the complete resource; omitted optional fields reset
-to defaults. Lists accept `offset` (default 0) and `limit` (default 100, max 1000).
-POST returns 201, DELETE returns 204, missing records/references return 404,
-invalid input returns 422, and conflicts (including duplicate emails) return 409.
-Prices and inventory quantities are returned as decimal strings.
+### Endpoint permissions
 
-Create menu items and optional users/toppings first, then POST an order:
+| Endpoint | Access / behavior |
+|---|---|
+| `POST /auth/register` | Public; always creates a customer with a permanent password |
+| `POST /auth/login` | Public; returns user + CSRF token and sets the session cookie |
+| `GET /auth/me` | Signed in; returns user + current CSRF token |
+| `POST /auth/logout` | Signed in; revokes session and clears cookie |
+| `POST /auth/change-password` | Signed in; checks current password, revokes all sessions; log in again |
+| `PUT /auth/profile` | Current user edits name, address, phone, dine-in name; no email/role changes |
+| `POST /staff/customers` | Staff/admin creates a customer with a temporary password |
+| `GET /staff/customers?q=...` | Staff/admin customer lookup by name, email, or phone |
+| `GET /admin/users` | Admin lists users |
+| `PATCH /admin/users/{id}/access` | Admin sets `role` and `active`; revokes that user's sessions |
+| `GET /drinks`, `/pizzas`, `/toppings`, and their `/{id}` routes | Public menu |
+| Menu POST/PUT/DELETE and all `/inventory` routes | Staff/admin |
+| `POST /orders` | Customer; owner and creator come from the session |
+| `POST /staff/orders` | Staff/admin; requires registered customer `user_id`; records staff creator |
+| `GET /orders`, `GET /orders/{id}` | Customers see only their own orders; staff/admin see all |
+| `PUT /orders/{id}` | Staff/admin replaces items, preserving owner, creator, status, and time |
+| `PATCH /orders/{id}/status` | Staff/admin; body contains only `status` |
+| `DELETE /orders/{id}` | Admin only |
 
-```json
-{
-  "user_id": 1,
-  "drinks": [{"drink_id": 1, "quantity": 2}],
-  "pizzas": [{"pizza_id": 1, "quantity": 1, "topping_ids": [1, 2]}]
-}
+Public `/users` CRUD was removed. Accounts are disabled, rather than deleted, to preserve
+order attribution. Admins cannot change their own access through the API. A staff member
+can place a phone order for a newly registered customer before that customer changes
+their temporary password. Temporary-password sessions may use `/auth/me`, logout, and
+password change; protected business/profile endpoints reject them until the password changes.
+Public menu/registration remain public. Customers do not edit or cancel submitted orders
+in this version; staff can correct order items.
+
+### Cookies and CSRF (also applies to Postman and API tests)
+
+- Login/registration requests require `X-CSRF-Protection: 1`.
+- Login sets `luigi_session` (`HttpOnly`, `SameSite=Lax`, `Secure` by default, host-only).
+  The database stores a SHA-256 hash of the random token, not the cookie value.
+- Authenticated POST/PUT/PATCH/DELETE requests require the cookie **and** the
+  `X-CSRF-Token` value returned by login or `/auth/me`.
+- If an `Origin` header is present on a write, it must match `APP_ORIGIN`. Command-line
+  clients may omit Origin; they must still send the required CSRF headers.
+- Sessions expire after 8 hours or 30 minutes of inactivity. Login rotates the browser's
+  prior session. Logout, password changes, and account access changes revoke sessions.
+- `401` means missing/invalid/expired authentication; `403` means insufficient permission,
+  required password change, or rejected CSRF/origin. Other customers' orders return `404`.
+
+### Try the API without a UI
+
+Swagger is at `http://127.0.0.1:8000/docs`. Log in using the `X-CSRF-Protection` field;
+the browser stores the cookie automatically. Copy `csrf_token` into the `X-CSRF-Token`
+field for protected writes. No cookie value needs to be copied into JavaScript.
+
+Alternatively, this PowerShell flow retains cookies automatically. Supply the administrator
+email/password provisioned above. For a newly provisioned account, change its password first:
+
+```powershell
+$base = "http://127.0.0.1:8000"
+$email = Read-Host "Administrator email"
+$password = Read-Host "Temporary password" -MaskInput
+$auth = Invoke-RestMethod "$base/auth/login" -Method Post -SessionVariable apiSession `
+    -ContentType "application/json" -Headers @{"X-CSRF-Protection"="1"} `
+    -Body (@{email=$email; password=$password} | ConvertTo-Json)
+$newPassword = Read-Host "New password" -MaskInput
+Invoke-RestMethod "$base/auth/change-password" -Method Post -WebSession $apiSession `
+    -ContentType "application/json" -Headers @{"X-CSRF-Token"=$auth.csrf_token} `
+    -Body (@{current_password=$password; new_password=$newPassword} | ConvertTo-Json)
+$auth = Invoke-RestMethod "$base/auth/login" -Method Post -SessionVariable apiSession `
+    -ContentType "application/json" -Headers @{"X-CSRF-Protection"="1"} `
+    -Body (@{email=$email; password=$newPassword} | ConvertTo-Json)
+$csrf = @{"X-CSRF-Token"=$auth.csrf_token}
+
+$temporaryPassword = Read-Host "Customer temporary password" -MaskInput
+$customer = Invoke-RestMethod "$base/staff/customers" -Method Post -WebSession $apiSession `
+    -ContentType "application/json" -Headers $csrf -Body (@{
+        name="Alex"; address="123 Main"; phone_number="555-0100"; dine_in_name="Alex"
+        email="alex@example.com"; password=$temporaryPassword
+    } | ConvertTo-Json)
+$pizza = Invoke-RestMethod "$base/pizzas" -Method Post -WebSession $apiSession `
+    -ContentType "application/json" -Headers $csrf `
+    -Body (@{size="large"; price="9.00"} | ConvertTo-Json)
+$order = Invoke-RestMethod "$base/staff/orders" -Method Post -WebSession $apiSession `
+    -ContentType "application/json" -Headers $csrf -Body (@{
+        user_id=$customer.id; pizzas=@(@{pizza_id=$pizza.id; quantity=1})
+    } | ConvertTo-Json -Depth 5)
+Invoke-RestMethod "$base/orders/$($order.id)" -WebSession $apiSession
+Invoke-RestMethod "$base/auth/logout" -Method Post -WebSession $apiSession -Headers $csrf
 ```
 
-An order must contain drinks, pizzas, or both. Omit `user_id` for guest orders.
-Either item list and `topping_ids` may be omitted; toppings default to empty.
-Quantities default to 1 and must be positive integers. Each drink/pizza ID may
-appear once per order (use quantity for multiples); topping IDs must be unique
-within each pizza entry. Toppings belong to that order's pizza, not the menu item.
-Order creation and replacement are atomic, including reference validation.
+The example uses PowerShell 7 (`Read-Host -MaskInput`). To test customer self-service,
+register at `/auth/register` with the same customer fields, log in, then POST `/orders`
+with items only. Neither `user_id` nor `status` is accepted from customers.
 
-Deleting an order removes its association rows but retains menu items and toppings.
-Deleting a menu item or topping still referenced by orders returns 409.
-Deleting a user preserves their orders as guest orders. Inventory CRUD stores
-stock quantities; orders do not automatically deduct ingredients because the
-schema has no ingredient recipe mapping. These endpoints do not implement authentication.
+Orders require at least one pizza or drink. Quantities are positive integers; duplicate
+product IDs and topping IDs are rejected. List endpoints accept `offset` (default 0)
+and `limit` (default 100, maximum 1000). Prices/quantities use decimal strings.
+Missing records return 404; invalid input 422; conflicts 409. Ordered menu items cannot
+be deleted until their order references are removed. Inventory is independent of orders;
+there is no automatic ingredient deduction.
 
-Run the API and database tests:
+### Tests and scope
 
 ```powershell
 .venv/Scripts/python.exe -m pytest -q
 ```
 
-API tests use isolated temporary SQLite databases and do not modify production data.
+Tests use isolated SQLite databases and real API authentication, with no UI and no auth
+bypass. They cover catalog/order behavior, registration, temporary passwords, ownership,
+roles, CSRF/origin checks, session expiration/revocation, restart persistence, and migration.
+
+This student implementation does not include email verification, self-service password
+recovery, login rate limiting, or a full audit trail. The local account command can reset
+credentials. For public deployment, add login/registration throttling at a trusted gateway,
+terminate HTTPS there, and restrict direct access to the application server. Keep database
+files/backups private: they contain customer information, password hashes, and session state.

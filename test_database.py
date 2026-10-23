@@ -90,7 +90,7 @@ def add_user(engine):
             user = User(**values)
             session.add(user)
             session.commit()
-            return user.id, user.admin, user.phone_number
+            return user.id, user.role, user.phone_number
 
     return create_user
 
@@ -287,12 +287,12 @@ def test_pizza_requires_size_and_price(engine, missing_column):
             session.commit()
 
 
-def test_generated_id_default_admin_and_optional_email(add_user):
-    first_id, admin, phone = add_user()
+def test_generated_id_default_role_and_optional_email(add_user):
+    first_id, role, phone = add_user()
     second_id, _, _ = add_user()
     assert isinstance(first_id, int)
     assert first_id != second_id
-    assert admin is False
+    assert role == "customer"
     assert phone == "+1 0123"
 
 
@@ -302,16 +302,16 @@ def test_unique_email(add_user):
         add_user(email="alex@example.com")
 
 
-def test_admin_true(add_user):
-    assert add_user(admin=True)[1] is True
+def test_admin_role(add_user):
+    assert add_user(role="admin")[1] == "admin"
 
 
-@pytest.mark.parametrize("invalid", [2, None])
-def test_database_rejects_invalid_admin(engine, add_user, invalid):
+@pytest.mark.parametrize("invalid", ["owner", None])
+def test_database_rejects_invalid_role(engine, add_user, invalid):
     user_id, _, _ = add_user()
     with pytest.raises(IntegrityError):
         with engine.begin() as connection:
-            connection.execute(text("UPDATE users SET admin = :value WHERE id = :id"),
+            connection.execute(text("UPDATE users SET role = :value WHERE id = :id"),
                                {"value": invalid, "id": user_id})
 
 

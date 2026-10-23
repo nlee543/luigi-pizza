@@ -1,2 +1,5 @@
 # Create a .env file similar to the following
 CONNECTIONSTRING=sqlite:///file_name.db
+# Local HTTP development only. Use true (the default) when serving over HTTPS.
+COOKIE_SECURE=false
+APP_ORIGIN=http://127.0.0.1:8000

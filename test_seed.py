@@ -20,7 +20,8 @@ def test_seed_populates_all_tables_and_assigns_customers(legacy):
         assert counts["users"] == 20
         assert counts["orders"] == 100
         assert counts["pizzas"] == 3
-        assert all(count > 0 for count in counts.values())
+        assert counts["login_sessions"] == 0
+        assert all(count > 0 for table, count in counts.items() if table != "login_sessions")
         with Session(engine) as session:
             pizzas = session.scalars(select(Pizza)).all()
             assert {(pizza.size, pizza.price) for pizza in pizzas} == {

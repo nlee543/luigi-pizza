@@ -7,11 +7,14 @@ from pathlib import Path
 from typing import Annotated, Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
+from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-from sqlalchemy import URL, create_engine, event, select
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import URL, create_engine, event, inspect, select
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+
+from api.auth import (Admin, CurrentUser, DB, Staff, UserOutput, commit, require_staff, router as auth_router)
+from starlette.responses import JSONResponse
 
 from models import Base, Drink, Inventory, Order, OrderDrink, OrderPizza, OrderTopping, Pizza, Topping, User
 
@@ -25,19 +28,6 @@ Name = Annotated[str, Field(min_length=1, max_length=50)]
 Money = Annotated[Decimal, Field(ge=0, max_digits=10, decimal_places=2)]
 ID = Annotated[int, Field(gt=0, strict=True)]
 Quantity = Annotated[int, Field(gt=0, strict=True)]
-
-
-class UserInput(Schema):
-    name: Text
-    address: Text
-    phone_number: Text
-    email: str | None = None
-    dine_in_name: Text
-    admin: bool = False
-
-
-class UserOutput(UserInput):
-    id: int
 
 
 class PizzaInput(Schema):
@@ -94,9 +84,10 @@ class PizzaLine(Schema):
         return self
 
 
+OrderStatus = Literal["order_received", "preparing", "out_for_delivery", "ready_for_pickup", "completed"]
+
+
 class OrderInput(Schema):
-    status: Literal["order_received", "preparing", "out_for_delivery", "ready_for_pickup", "completed"] = "order_received"
-    user_id: ID | None = None
     drinks: list[DrinkLine] = Field(default_factory=list)
     pizzas: list[PizzaLine] = Field(default_factory=list)
 
@@ -111,17 +102,20 @@ class OrderInput(Schema):
         return self
 
 
+class StaffOrderInput(OrderInput):
+    user_id: ID
+
+
+class StatusInput(Schema):
+    status: OrderStatus
+
+
 class OrderOutput(OrderInput):
     id: int
+    user_id: int | None
+    created_by_user_id: int | None
+    status: OrderStatus
     order_time: datetime
-
-
-def get_session(request: Request):
-    with request.app.state.sessions() as session:
-        yield session
-
-
-DB = Annotated[Session, Depends(get_session)]
 
 
 def get_record(session, model, record_id):
@@ -131,17 +125,9 @@ def get_record(session, model, record_id):
     return record
 
 
-def commit(session):
-    try:
-        session.commit()
-    except IntegrityError:
-        session.rollback()
-        raise HTTPException(409, "Operation conflicts with existing data or database constraints.") from None
-
-
 def order_output(order):
     return OrderOutput(
-        id=order.id, user_id=order.user_id,
+        id=order.id, user_id=order.user_id, created_by_user_id=order.created_by_user_id,
         status=order.status, order_time=order.order_time.replace(tzinfo=timezone.utc),
         drinks=[DrinkLine(drink_id=line.drink_id, quantity=line.quantity) for line in order.order_drinks],
         pizzas=[PizzaLine(pizza_id=line.pizza_id, quantity=line.quantity,
@@ -152,14 +138,10 @@ def order_output(order):
 
 def set_order(session, order, data):
     # Resolve every reference before changing anything; the request is atomic.
-    user = get_record(session, User, data.user_id) if data.user_id is not None else None
     drinks = [(line, get_record(session, Drink, line.drink_id)) for line in data.drinks]
     pizzas = [(line, get_record(session, Pizza, line.pizza_id),
                [get_record(session, Topping, tid) for tid in line.topping_ids]) for line in data.pizzas]
     session.add(order)
-    order.user = user
-    if "status" in data.model_fields_set:
-        order.status = data.status
     # Flush deletions before recreating links to avoid unique-pair conflicts.
     order.order_drinks.clear()
     order.order_pizzas.clear()
@@ -210,10 +192,11 @@ def register_crud(app, path, model, input_schema, output_schema):
     ):
         app.add_api_route(f"/{path}{suffix}", endpoint, methods=[method],
                           response_model=response, status_code=status, tags=[path],
+                          dependencies=[Depends(require_staff)] if method != "GET" or path == "inventory" else [],
                           name=f"{method.lower()}_{path}{'_item' if suffix else ''}")
 
 
-def create_app(connection_string=None):
+def create_app(connection_string=None, *, cookie_secure=None, allowed_origin=None):
     @asynccontextmanager
     async def lifespan(app):
         url = connection_string or os.getenv("CONNECTIONSTRING") or URL.create(
@@ -233,6 +216,14 @@ def create_app(connection_string=None):
             cursor.close()
 
         try:
+            schema = inspect(engine)
+            tables = schema.get_table_names()
+            if "users" in tables:
+                columns = {c["name"] for c in schema.get_columns("users")}
+                if not {"role", "password_hash", "must_change_password", "active"} <= columns:
+                    raise RuntimeError("Run migrate_auth.py on this database before starting the API.")
+            if "orders" in tables and "created_by_user_id" not in {c["name"] for c in schema.get_columns("orders")}:
+                raise RuntimeError("Run migrate_auth.py on this database before starting the API.")
             Base.metadata.create_all(engine)
             app.state.sessions = sessionmaker(bind=engine)
             yield
@@ -240,8 +231,29 @@ def create_app(connection_string=None):
             engine.dispose()
 
     app = FastAPI(title="Luigi's Pizza API", lifespan=lifespan)
+    app.state.cookie_secure = cookie_secure if cookie_secure is not None else os.getenv("COOKIE_SECURE", "true").lower() == "true"
+    app.state.allowed_origin = (allowed_origin or os.getenv("APP_ORIGIN", "http://127.0.0.1:8000")).rstrip("/")
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error(request: Request, exc: RequestValidationError):
+        # Never echo passwords or whole registration bodies in validation errors.
+        errors = [{key: error[key] for key in ("type", "loc", "msg")} for error in exc.errors()]
+        return JSONResponse({"detail": errors}, status_code=422)
+
+    @app.middleware("http")
+    async def browser_security(request: Request, call_next):
+        if request.method not in {"GET", "HEAD", "OPTIONS"}:
+            origin = request.headers.get("origin")
+            if origin and origin != app.state.allowed_origin:
+                return JSONResponse({"detail": "Request origin is not allowed."}, status_code=403)
+        response = await call_next(request)
+        # Authenticated responses contain private customer/order data.
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        return response
+
+    app.include_router(auth_router)
     for args in (
-        ("users", User, UserInput, UserOutput),
         ("drinks", Drink, DrinkInput, DrinkOutput),
         ("pizzas", Pizza, PizzaInput, PizzaOutput),
         ("toppings", Topping, ToppingInput, ToppingOutput),
@@ -249,30 +261,70 @@ def create_app(connection_string=None):
     ):
         register_crud(app, *args)
 
+    @app.get("/staff/customers", response_model=list[UserOutput], tags=["customers"])
+    def find_customers(session: DB, staff: Staff, q: str = Query("", max_length=254),
+                       offset: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=1000)):
+        statement = select(User).where(User.role == "customer")
+        if q:
+            statement = statement.where(User.email.contains(q.strip().lower(), autoescape=True) |
+                                        User.phone_number.contains(q, autoescape=True) |
+                                        User.name.contains(q, autoescape=True))
+        return session.scalars(statement.order_by(User.id).offset(offset).limit(limit)).all()
+
+    @app.get("/admin/users", response_model=list[UserOutput], tags=["users"])
+    def list_users(session: DB, admin: Admin, offset: int = Query(0, ge=0),
+                   limit: int = Query(100, ge=1, le=1000)):
+        return session.scalars(select(User).order_by(User.id).offset(offset).limit(limit)).all()
+
     @app.post("/orders", response_model=OrderOutput, status_code=201, tags=["orders"])
-    def create_order(data: OrderInput, session: DB):
-        order = Order()
+    def create_order(data: OrderInput, session: DB, user: CurrentUser):
+        if user.role != "customer":
+            raise HTTPException(403, "Use /staff/orders to select a customer.")
+        order = Order(user_id=user.id, created_by_user_id=user.id)
+        set_order(session, order, data)
+        commit(session)
+        return order_output(order)
+
+    @app.post("/staff/orders", response_model=OrderOutput, status_code=201, tags=["orders"])
+    def staff_create_order(data: StaffOrderInput, session: DB, staff: Staff):
+        customer = get_record(session, User, data.user_id)
+        if customer.role != "customer" or not customer.active or not customer.password_hash:
+            raise HTTPException(409, "Select an active, registered customer.")
+        order = Order(user_id=customer.id, created_by_user_id=staff.id)
         set_order(session, order, data)
         commit(session)
         return order_output(order)
 
     @app.get("/orders", response_model=list[OrderOutput], tags=["orders"])
-    def list_orders(session: DB, offset: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=1000)):
-        return [order_output(order) for order in session.scalars(select(Order).order_by(Order.id).offset(offset).limit(limit))]
+    def list_orders(session: DB, user: CurrentUser, offset: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=1000)):
+        statement = select(Order)
+        if user.role == "customer":
+            statement = statement.where(Order.user_id == user.id)
+        return [order_output(order) for order in session.scalars(statement.order_by(Order.id).offset(offset).limit(limit))]
 
     @app.get("/orders/{record_id}", response_model=OrderOutput, tags=["orders"])
-    def read_order(record_id: int, session: DB):
-        return order_output(get_record(session, Order, record_id))
+    def read_order(record_id: int, session: DB, user: CurrentUser):
+        order = get_record(session, Order, record_id)
+        if user.role == "customer" and order.user_id != user.id:
+            raise HTTPException(404, "Order not found.")
+        return order_output(order)
 
     @app.put("/orders/{record_id}", response_model=OrderOutput, tags=["orders"])
-    def update_order(record_id: int, data: OrderInput, session: DB):
+    def update_order(record_id: int, data: OrderInput, session: DB, staff: Staff):
         order = get_record(session, Order, record_id)
         set_order(session, order, data)
         commit(session)
         return order_output(order)
 
+    @app.patch("/orders/{record_id}/status", response_model=OrderOutput, tags=["orders"])
+    def update_status(record_id: int, data: StatusInput, session: DB, staff: Staff):
+        order = get_record(session, Order, record_id)
+        order.status = data.status
+        commit(session)
+        return order_output(order)
+
     @app.delete("/orders/{record_id}", status_code=204, tags=["orders"])
-    def delete_order(record_id: int, session: DB):
+    def delete_order(record_id: int, session: DB, admin: Admin):
         session.delete(get_record(session, Order, record_id))
         commit(session)
         return Response(status_code=204)
