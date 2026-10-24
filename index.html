@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Luigi's Pizza</title>
+<style>
+  :root {
+    --cream: #fbf5ea;
+    --paper: #ffffff;
+    --ink: #2b211b;
+    --muted: #7a6c61;
+    --line: #eadfce;
+    --tomato: #c8341f;
+    --tomato-dark: #a02715;
+    --basil: #2f6b3a;
+    --basil-soft: #e4f0e4;
+    --gold: #e8a33d;
+    --gold-soft: #fbefd5;
+    --danger-soft: #fbe3de;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(60,35,20,.06), 0 6px 18px rgba(60,35,20,.07);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --cream: #1c1613; --paper: #272019; --ink: #f4ebdf; --muted: #b3a493;
+      --line: #3a3027; --tomato: #e4513a; --tomato-dark: #f06a53;
+      --basil: #7fc48b; --basil-soft: #1f3324; --gold-soft: #3a2c14; --danger-soft: #3d1f19;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.3);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--cream); color: var(--ink);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; line-height: 1.2; margin: 0; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+  header.top {
+    background: var(--tomato); color: #fff; position: sticky; top: 0; z-index: 20;
+    box-shadow: 0 2px 10px rgba(0,0,0,.18);
+  }
+  .top-inner {
+    max-width: 1100px; margin: 0 auto; padding: 10px 16px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .brand { font: 700 1.5rem Georgia, serif; letter-spacing: .2px; display: flex; align-items: center; gap: 8px; }
+  nav { display: flex; gap: 4px; margin-left: auto; }
+  nav button {
+    background: transparent; border: 0; color: #fff; padding: 8px 14px; border-radius: 999px;
+    font-weight: 600; opacity: .85;
+  }
+  nav button:hover { opacity: 1; background: rgba(255,255,255,.14); }
+  nav button[aria-selected="true"] { background: #fff; color: var(--tomato-dark); opacity: 1; }
+  .cart-pill { background: var(--gold); color: #3a2400; border-radius: 999px; padding: 1px 8px; font-size: .8rem; margin-left: 6px; font-weight: 700; }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  .view[hidden] { display: none; }
+  .hero { margin-bottom: 22px; }
+  .hero h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); }
+  .hero p { color: var(--muted); margin: 6px 0 0; }
+
+  .layout { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
+  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 18px;
+  }
+  .card + .card { margin-top: 16px; }
+  .section-title { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+  .section-title h2 { font-size: 1.25rem; }
+  .step { background: var(--tomato); color: #fff; border-radius: 50%; width: 26px; height: 26px; display: inline-grid; place-items: center; font: 700 .85rem system-ui; }
+  .hint { color: var(--muted); font-size: .9rem; margin: 0 0 12px; }
+
+  .sizes { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+  .size-opt {
+    border: 2px solid var(--line); border-radius: var(--radius); background: var(--paper);
+    padding: 14px 10px; text-align: center; transition: .15s;
+  }
+  .size-opt:hover { border-color: var(--gold); }
+  .size-opt[aria-pressed="true"] { border-color: var(--tomato); background: var(--danger-soft); }
+  .size-opt .disc { margin: 0 auto 8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #f3c46b, #d98a2b); border: 3px solid #b8691a; }
+  .size-opt .name { font-weight: 700; text-transform: capitalize; }
+  .size-opt .price { color: var(--muted); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    border: 1.5px solid var(--line); background: var(--paper); border-radius: 999px; padding: 7px 14px; font-weight: 500;
+  }
+  .chip:hover { border-color: var(--basil); }
+  .chip[aria-pressed="true"] { background: var(--basil); border-color: var(--basil); color: #fff; }
+  .chip[aria-pressed="true"]::before { content: "✓ "; }
+
+  .qty { display: inline-flex; align-items: center; border: 1.5px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--paper); }
+  .qty button { background: transparent; border: 0; width: 34px; height: 34px; font-size: 1.1rem; }
+  .qty button:hover { background: var(--gold-soft); }
+  .qty span { min-width: 28px; text-align: center; font-weight: 600; }
+
+  .btn { border: 0; border-radius: 999px; padding: 11px 20px; font-weight: 700; background: var(--tomato); color: #fff; }
+  .btn:hover { background: var(--tomato-dark); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.secondary { background: transparent; color: var(--tomato-dark); border: 1.5px solid var(--tomato); }
+  .btn.secondary:hover { background: var(--danger-soft); }
+  .btn.green { background: var(--basil); color: #fff; }
+  .btn.green:hover { filter: brightness(.92); }
+  .btn.small { padding: 6px 14px; font-size: .9rem; }
+  .btn.block { width: 100%; }
+  .link { background: none; border: 0; color: var(--tomato-dark); text-decoration: underline; padding: 0; }
+
+  .drinks { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+  .drink { display: flex; flex-direction: column; gap: 8px; border: 1.5px solid var(--line); border-radius: var(--radius); padding: 12px; }
+  .drink strong { font-size: 1rem; }
+  .seg { display: flex; border: 1.5px solid var(--line); border-radius: 999px; overflow: hidden; }
+  .seg button { flex: 1; background: transparent; border: 0; padding: 5px 4px; font-size: .85rem; text-transform: capitalize; }
+  .seg button[aria-pressed="true"] { background: var(--gold); color: #3a2400; font-weight: 700; }
+
+  aside.cart { position: sticky; top: 76px; }
+  @media (max-width: 860px) { aside.cart { position: static; } }
+  .cart h2 { font-size: 1.25rem; margin-bottom: 10px; }
+  .empty { color: var(--muted); text-align: center; padding: 18px 0; }
+  .line { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; padding: 12px 0; border-top: 1px solid var(--line); }
+  .line:first-of-type { border-top: 0; }
+  .line .t { font-weight: 600; }
+  .line .sub { color: var(--muted); font-size: .88rem; grid-column: 1 / -1; }
+  .line .actions { display: flex; align-items: center; gap: 10px; grid-column: 1 / -1; justify-content: space-between; }
+  .total { display: flex; justify-content: space-between; font: 700 1.2rem Georgia, serif; padding: 14px 0 12px; border-top: 2px solid var(--ink); margin-top: 6px; }
+
+  label.field { display: block; margin-bottom: 12px; font-weight: 600; font-size: .92rem; }
+  label.field input, label.field select {
+    display: block; width: 100%; margin-top: 4px; padding: 10px 12px; border: 1.5px solid var(--line);
+    border-radius: 10px; background: var(--paper); font-weight: 400;
+  }
+  label.field input:focus { border-color: var(--tomato); outline: none; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 520px) { .row2 { grid-template-columns: 1fr; } }
+
+  .tabs2 { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .tabs2 button { border: 1.5px solid var(--line); background: var(--paper); border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: .92rem; }
+  .tabs2 button[aria-selected="true"] { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+
+  .banner { padding: 12px 14px; border-radius: 10px; margin: 0 0 14px; font-size: .95rem; }
+  .banner.ok { background: var(--basil-soft); color: var(--basil); }
+  .banner.err { background: var(--danger-soft); color: var(--tomato-dark); }
+  .banner.info { background: var(--gold-soft); }
+
+  /* Tracker */
+  .track-form { display: flex; gap: 10px; flex-wrap: wrap; }
+  .track-form input { flex: 1; min-width: 160px; padding: 11px 14px; border: 1.5px solid var(--line); border-radius: 999px; background: var(--paper); }
+  .progress { display: flex; margin: 26px 0 8px; }
+  .progress .st { flex: 1; text-align: center; position: relative; font-size: .85rem; color: var(--muted); }
+  .progress .st::before {
+    content: ""; position: absolute; top: 15px; left: -50%; width: 100%; height: 4px; background: var(--line); z-index: 0;
+  }
+  .progress .st:first-child::before { display: none; }
+  .progress .st.done::before, .progress .st.now::before { background: var(--basil); }
+  .progress .dot {
+    width: 34px; height: 34px; border-radius: 50%; background: var(--line); margin: 0 auto 6px; position: relative; z-index: 1;
+    display: grid; place-items: center; font-size: 1rem;
+  }
+  .progress .st.done .dot { background: var(--basil); color: #fff; }
+  .progress .st.now .dot { background: var(--tomato); color: #fff; box-shadow: 0 0 0 5px var(--danger-soft); }
+  .progress .st.now { color: var(--ink); font-weight: 700; }
+  .receipt .li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px dashed var(--line); }
+  .receipt .li:first-child { border-top: 0; }
+  .receipt .li small { color: var(--muted); display: block; }
+
+  /* Staff */
+  .board { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .order-card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); padding: 14px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 8px; }
+  .order-card header { display: flex; justify-content: space-between; align-items: baseline; }
+  .order-card .num { font: 700 1.15rem Georgia, serif; }
+  .badge { font-size: .78rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--gold-soft); white-space: nowrap; }
+  .badge.order_received { background: var(--danger-soft); color: var(--tomato-dark); }
+  .badge.preparing { background: var(--gold-soft); color: #8a5a00; }
+  .badge.out_for_delivery, .badge.ready_for_pickup { background: #dbeafe; color: #1e4d8f; }
+  .badge.completed { background: var(--basil-soft); color: var(--basil); }
+  .order-card ul { margin: 0; padding-left: 18px; font-size: .92rem; }
+  .order-card .meta { color: var(--muted); font-size: .85rem; }
+  .order-card .btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+  th { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  td input { width: 90px; padding: 6px 8px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--paper); }
+  .low { color: var(--tomato-dark); font-weight: 700; }
+
+  #toast {
+    position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(30px); opacity: 0;
+    background: var(--ink); color: var(--cream); padding: 11px 20px; border-radius: 999px; z-index: 50;
+    transition: .25s; pointer-events: none; max-width: 92vw; text-align: center;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .loading { color: var(--muted); padding: 30px; text-align: center; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand"><span aria-hidden="true">🍕</span> Luigi's Pizza</div>
+    <nav role="tablist" aria-label="Sections">
+      <button role="tab" data-view="order" aria-selected="true">Order<span class="cart-pill" id="cartCount" hidden>0</span></button>
+      <button role="tab" data-view="track" aria-selected="false">Track order</button>
+      <button role="tab" data-view="staff" aria-selected="false">Staff</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div id="apiError" class="banner err" hidden></div>
+
+  <!-- ORDER -->
+  <section class="view" id="view-order">
+    <div class="hero">
+      <h1>Hot, fresh, made your way.</h1>
+      <p>Build your pizza, add a drink, and check out in under a minute.</p>
+    </div>
+    <div class="layout">
+      <div>
+        <div class="card" id="pizzaBuilder">
+          <div class="loading">Loading the menu…</div>
+        </div>
+        <div class="card">
+          <div class="section-title"><span class="step">3</span><h2>Add a drink</h2></div>
+          <p class="hint">Optional. Pick a size, then tap + to add.</p>
+          <div class="drinks" id="drinks"></div>
+        </div>
+      </div>
+
+      <aside class="cart">
+        <div class="card cart" id="cartCard">
+          <h2>Your order</h2>
+          <div id="cartBody"></div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="card" id="checkout" hidden style="margin-top:24px">
+      <div class="section-title"><h2>Checkout</h2></div>
+      <p class="hint">Tell us who this order is for.</p>
+      <div class="tabs2" role="tablist" id="whoTabs">
+        <button role="tab" data-who="returning" aria-selected="true">I'm a returning customer</button>
+        <button role="tab" data-who="new" aria-selected="false">I'm new here</button>
+        <button role="tab" data-who="guest" aria-selected="false">Continue as guest</button>
+      </div>
+      <div id="who-returning">
+        <label class="field">Find your name
+          <input id="custSearch" type="search" placeholder="Start typing your name…" autocomplete="off">
+        </label>
+        <label class="field">Select customer
+          <select id="custSelect" size="1"></select>
+        </label>
+      </div>
+      <div id="who-new" hidden>
+        <div class="row2">
+          <label class="field">Full name<input id="nName" autocomplete="name"></label>
+          <label class="field">Name for dine-in<input id="nDine" placeholder="e.g. first name"></label>
+        </div>
+        <div class="row2">
+          <label class="field">Phone<input id="nPhone" type="tel" autocomplete="tel"></label>
+          <label class="field">Email (optional)<input id="nEmail" type="email" autocomplete="email"></label>
+        </div>
+        <label class="field">Delivery address<input id="nAddr" autocomplete="street-address"></label>
+      </div>
+      <div id="who-guest" hidden>
+        <div class="banner info">Guest orders aren't linked to a name or address, so write down your order number to track it.</div>
+      </div>
+      <button class="btn" id="placeBtn">Place order</button>
+    </div>
+  </section>
+
+  <!-- TRACK -->
+  <section class="view" id="view-track" hidden>
+    <div class="hero">
+      <h1>Where's my pizza?</h1>
+      <p>Enter your order number to see its progress. This page updates on its own.</p>
+    </div>
+    <div class="card">
+      <form class="track-form" id="trackForm">
+        <label class="sr" for="trackId">Order number</label>
+        <input id="trackId" type="number" min="1" inputmode="numeric" placeholder="Order number, e.g. 42" required>
+        <button class="btn" type="submit">Track</button>
+      </form>
+      <div id="trackResult"></div>
+    </div>
+  </section>
+
+  <!-- STAFF -->
+  <section class="view" id="view-staff" hidden>
+    <div class="hero">
+      <h1>Kitchen &amp; front of house</h1>
+      <p>Move orders along and keep an eye on stock. (This app has no login, so only share it with your team.)</p>
+    </div>
+    <div class="tabs2" role="tablist" id="staffTabs">
+      <button role="tab" data-st="orders" aria-selected="true">Orders</button>
+      <button role="tab" data-st="inventory" aria-selected="false">Inventory</button>
+    </div>
+    <div id="st-orders">
+      <div class="tabs2" id="statusFilter"></div>
+      <div class="board" id="board"></div>
+    </div>
+    <div id="st-inventory" hidden>
+      <div class="card"><table id="invTable"></table></div>
+    </div>
+  </section>
+</main>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+const API = "http://127.0.0.1:8000";   // same origin as the API
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const money = n => "$" + Number(n).toFixed(2);
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const SIZE_ORDER = { small: 0, medium: 1, large: 2 };
+const STATUS_LABEL = {
+  order_received: "Order received", preparing: "Preparing",
+  out_for_delivery: "Out for delivery", ready_for_pickup: "Ready for pickup", completed: "Completed",
+};
+
+const state = {
+  pizzas: [], toppings: [], drinks: [], users: [],
+  menuLoaded: false,
+  builder: { sizeId: null, toppingIds: new Set(), qty: 1 },
+  drinkSize: {},                       // drink name -> selected drink id
+  cart: { pizzas: [], drinks: [] },    // pizzas: {pizza_id, quantity, topping_ids[]}; drinks: {drink_id, quantity}
+  who: "returning",
+  trackTimer: null, staffTimer: null,
+  statusFilter: "active",
+};
+
+/* ---------- API ---------- */
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: { "Content-Type": "application/json" }, ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  if (res.status === 204) return null;
+  let data = null;
+  try { data = await res.json(); } catch (_) {}
+  if (!res.ok) {
+    let msg = "Something went wrong.";
+    if (data && typeof data.detail === "string") msg = data.detail;
+    else if (data && Array.isArray(data.detail)) msg = data.detail.map(d => d.msg.replace(/^Value error, /, "")).join(" ");
+    const err = new Error(msg); err.status = res.status; throw err;
+  }
+  return data;
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2800);
+}
+
+/* ---------- Navigation ---------- */
+function showView(name) {
+  $$("nav button").forEach(b => b.setAttribute("aria-selected", b.dataset.view === name));
+  $$(".view").forEach(v => v.hidden = v.id !== "view-" + name);
+  clearInterval(state.staffTimer); clearInterval(state.trackTimer);
+  if (name === "staff") { loadStaff(); state.staffTimer = setInterval(() => { if (!document.hidden) loadStaff(true); }, 15000); }
+  if (name === "track") { const id = $("#trackId").value; if (id) startTracking(id, true); }
+  history.replaceState(null, "", "#" + name);
+  window.scrollTo({ top: 0 });
+}
+$$("nav button").forEach(b => b.addEventListener("click", () => showView(b.dataset.view)));
+
+/* ---------- Menu loading ---------- */
+async function loadMenu() {
+  try {
+    const [pizzas, toppings, drinks, users] = await Promise.all([
+      api("/pizzas?limit=1000"), api("/toppings?limit=1000"), api("/drinks?limit=1000"), api("/users?limit=1000"),
+    ]);
+    state.pizzas = pizzas.sort((a, b) => (SIZE_ORDER[a.size] ?? 9) - (SIZE_ORDER[b.size] ?? 9) || a.price - b.price);
+    state.toppings = toppings; state.drinks = drinks; state.users = users;
+    state.menuLoaded = true;
+    $("#apiError").hidden = true;
+    state.builder.sizeId = state.pizzas.length ? state.pizzas[Math.min(1, state.pizzas.length - 1)].id : null;
+    renderBuilder(); renderDrinks(); renderCart(); renderCustomers();
+  } catch (e) {
+    const box = $("#apiError"); box.hidden = false;
+    box.textContent = "We couldn't reach the kitchen (the API). Make sure the server is running, then refresh. " + e.message;
+    $("#pizzaBuilder").innerHTML = '<div class="empty">Menu unavailable.</div>';
+  }
+}
+
+/* ---------- Pizza builder ---------- */
+function renderBuilder() {
+  const b = state.builder;
+  if (!state.pizzas.length) { $("#pizzaBuilder").innerHTML = '<div class="empty">No pizzas on the menu yet.</div>'; return; }
+  const px = { small: 44, medium: 60, large: 76 };
+  const sizes = state.pizzas.map(p => `
+    <button class="size-opt" data-pizza="${p.id}" aria-pressed="${b.sizeId === p.id}">
+      <div class="disc" style="width:${px[p.size] || 56}px;height:${px[p.size] || 56}px"></div>
+      <div class="name">${esc(p.size)}</div><div class="price">${money(p.price)}</div>
+    </button>`).join("");
+  const tops = state.toppings.map(t => `
+    <button class="chip" data-top="${t.id}" aria-pressed="${b.toppingIds.has(t.id)}">${esc(t.name)}</button>`).join("");
+  $("#pizzaBuilder").innerHTML = `
+    <div class="section-title"><span class="step">1</span><h2>Choose your size</h2></div>
+    <p class="hint">Prices shown are per pizza.</p>
+    <div class="sizes">${sizes}</div>
+    <div class="section-title" style="margin-top:22px"><span class="step">2</span><h2>Pick your toppings</h2></div>
+    <p class="hint">${state.toppings.length ? "Toppings are free. Tap as many as you like." : "No toppings available."}</p>
+    <div class="chips">${tops}</div>
+    <div style="display:flex;align-items:center;gap:14px;margin-top:22px;flex-wrap:wrap">
+      <div class="qty" aria-label="Quantity">
+        <button data-q="-1" aria-label="Fewer">−</button><span id="bq">${b.qty}</span><button data-q="1" aria-label="More">+</button>
+      </div>
+      <button class="btn" id="addPizza">Add pizza to order</button>
+    </div>`;
+}
+$("#pizzaBuilder").addEventListener("click", e => {
+  const b = state.builder;
+  const size = e.target.closest("[data-pizza]"), top = e.target.closest("[data-top]"), q = e.target.closest("[data-q]");
+  if (size) { b.sizeId = +size.dataset.pizza; $$(".size-opt").forEach(x => x.setAttribute("aria-pressed", +x.dataset.pizza === b.sizeId)); }
+  else if (top) {
+    const id = +top.dataset.top; b.toppingIds.has(id) ? b.toppingIds.delete(id) : b.toppingIds.add(id);
+    top.setAttribute("aria-pressed", b.toppingIds.has(id));
+  } else if (q) { b.qty = Math.min(20, Math.max(1, b.qty + +q.dataset.q)); $("#bq").textContent = b.qty; }
+  else if (e.target.closest("#addPizza")) addPizza();
+});
+
+const sameSet = (a, b) => a.length === b.length && a.every(x => b.includes(x));
+function addPizza() {
+  const b = state.builder, pizza = state.pizzas.find(p => p.id === b.sizeId);
+  if (!pizza) return;
+  const tops = [...b.toppingIds].sort((x, y) => x - y);
+  const existing = state.cart.pizzas.find(l => l.pizza_id === pizza.id);
+  if (existing) {
+    // The API allows one line per size per order, so one topping combo per size.
+    if (sameSet(existing.topping_ids, tops)) existing.quantity = Math.min(50, existing.quantity + b.qty);
+    else if (confirm(`Your order already has ${pizza.size} pizza(s) with different toppings.\n\nEach size can only have one topping combination per order. Replace those toppings with your new choice?\n\n(To get two different ${pizza.size} pizzas, place two separate orders.)`)) {
+      existing.topping_ids = tops; existing.quantity = Math.min(50, existing.quantity + b.qty);
+    } else return;
+  } else state.cart.pizzas.push({ pizza_id: pizza.id, quantity: b.qty, topping_ids: tops });
+  b.toppingIds.clear(); b.qty = 1; renderBuilder(); renderCart(); toast(`Added ${pizza.size} pizza`);
+}
+
+/* ---------- Drinks ---------- */
+function drinkGroups() {
+  const g = {};
+  state.drinks.forEach(d => (g[d.name] ||= []).push(d));
+  Object.values(g).forEach(a => a.sort((x, y) => (SIZE_ORDER[x.size] ?? 9) - (SIZE_ORDER[y.size] ?? 9)));
+  return g;
+}
+function renderDrinks() {
+  const groups = drinkGroups();
+  if (!Object.keys(groups).length) { $("#drinks").innerHTML = '<div class="empty">No drinks on the menu.</div>'; return; }
+  $("#drinks").innerHTML = Object.entries(groups).map(([name, list]) => {
+    const sel = list.find(d => d.id === state.drinkSize[name]) || list[Math.min(1, list.length - 1)];
+    state.drinkSize[name] = sel.id;
+    return `<div class="drink" data-name="${esc(name)}">
+      <strong>${esc(name)}</strong>
+      <div class="seg" role="group" aria-label="${esc(name)} size">${list.map(d =>
+        `<button data-drink="${d.id}" aria-pressed="${d.id === sel.id}">${esc(d.size)}</button>`).join("")}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span>${money(sel.price)}</span><button class="btn small green" data-add="${esc(name)}">+ Add</button>
+      </div></div>`;
+  }).join("");
+}
+$("#drinks").addEventListener("click", e => {
+  const pick = e.target.closest("[data-drink]"), add = e.target.closest("[data-add]");
+  if (pick) { state.drinkSize[pick.closest(".drink").dataset.name] = +pick.dataset.drink; renderDrinks(); }
+  else if (add) {
+    const id = state.drinkSize[add.dataset.add], d = state.drinks.find(x => x.id === id);
+    const line = state.cart.drinks.find(l => l.drink_id === id);
+    line ? line.quantity = Math.min(50, line.quantity + 1) : state.cart.drinks.push({ drink_id: id, quantity: 1 });
+    renderCart(); toast(`Added ${d.size} ${d.name}`);
+  }
+});
+
+/* ---------- Cart ---------- */
+const pizzaById = id => state.pizzas.find(p => p.id === id);
+const drinkById = id => state.drinks.find(d => d.id === id);
+const toppingName = id => (state.toppings.find(t => t.id === id) || { name: "?" }).name;
+function cartTotal() {
+  return state.cart.pizzas.reduce((s, l) => s + (pizzaById(l.pizza_id)?.price || 0) * l.quantity, 0) +
+         state.cart.drinks.reduce((s, l) => s + (drinkById(l.drink_id)?.price || 0) * l.quantity, 0);
+}
+function renderCart() {
+  const c = state.cart, count = c.pizzas.length + c.drinks.length;
+  const pill = $("#cartCount"); pill.hidden = !count; pill.textContent = c.pizzas.reduce((s, l) => s + l.quantity, 0) + c.drinks.reduce((s, l) => s + l.quantity, 0);
+  $("#checkout").hidden = !count;
+  if (!count) { $("#cartBody").innerHTML = '<div class="empty">Your order is empty.<br>Start with a pizza! 🍕</div>'; return; }
+  const pl = c.pizzas.map((l, i) => {
+    const p = pizzaById(l.pizza_id); if (!p) return "";
+    return `<div class="line"><span class="t">${l.quantity} × ${esc(cap(p.size))} pizza</span><span>${money(p.price * l.quantity)}</span>
+      <span class="sub">${l.topping_ids.length ? l.topping_ids.map(toppingName).map(esc).join(", ") : "Plain (no extra toppings)"}</span>
+      <div class="actions"><div class="qty"><button data-cp="${i}" data-d="-1" aria-label="Fewer">−</button><span>${l.quantity}</span><button data-cp="${i}" data-d="1" aria-label="More">+</button></div>
+      <button class="link" data-rp="${i}">Remove</button></div></div>`;
+  }).join("");
+  const dl = c.drinks.map((l, i) => {
+    const d = drinkById(l.drink_id); if (!d) return "";
+    return `<div class="line"><span class="t">${l.quantity} × ${esc(cap(d.size))} ${esc(d.name)}</span><span>${money(d.price * l.quantity)}</span>
+      <div class="actions"><div class="qty"><button data-cd="${i}" data-d="-1" aria-label="Fewer">−</button><span>${l.quantity}</span><button data-cd="${i}" data-d="1" aria-label="More">+</button></div>
+      <button class="link" data-rd="${i}">Remove</button></div></div>`;
+  }).join("");
+  $("#cartBody").innerHTML = pl + dl + `<div class="total"><span>Total</span><span>${money(cartTotal())}</span></div>
+    <a href="#checkout" class="btn block" style="display:block;text-align:center;text-decoration:none" id="toCheckout">Go to checkout</a>`;
+}
+$("#cartBody").addEventListener("click", e => {
+  const c = state.cart, t = e.target;
+  const bump = (arr, i, d) => { arr[i].quantity += d; if (arr[i].quantity < 1) arr.splice(i, 1); else arr[i].quantity = Math.min(50, arr[i].quantity); };
+  if (t.dataset.cp !== undefined) bump(c.pizzas, +t.dataset.cp, +t.dataset.d);
+  else if (t.dataset.cd !== undefined) bump(c.drinks, +t.dataset.cd, +t.dataset.d);
+  else if (t.dataset.rp !== undefined) c.pizzas.splice(+t.dataset.rp, 1);
+  else if (t.dataset.rd !== undefined) c.drinks.splice(+t.dataset.rd, 1);
+  else if (t.id === "toCheckout") { e.preventDefault(); $("#checkout").scrollIntoView({ behavior: "smooth" }); return; }
+  else return;
+  renderCart();
+});
+
+/* ---------- Checkout ---------- */
+function renderCustomers() {
+  const q = $("#custSearch").value.trim().toLowerCase();
+  const list = state.users.filter(u => !q || u.name.toLowerCase().includes(q) || u.phone_number.includes(q));
+  const saved = +localStorage.getItem("luigi.user") || null;
+  const sel = $("#custSelect"), prev = +sel.value || saved;
+  sel.innerHTML = list.length
+    ? list.map(u => `<option value="${u.id}">${esc(u.name)} — ${esc(u.phone_number)}</option>`).join("")
+    : '<option value="">No one found. Try “I\'m new here”.</option>';
+  if (list.some(u => u.id === prev)) sel.value = prev;
+  else if (list.length) sel.selectedIndex = 0;
+  sel.size = Math.min(Math.max(list.length, 1), 5) > 1 ? Math.min(list.length, 5) : 1;
+}
+$("#custSearch").addEventListener("input", renderCustomers);
+$("#whoTabs").addEventListener("click", e => {
+  const b = e.target.closest("[data-who]"); if (!b) return;
+  state.who = b.dataset.who;
+  $$("#whoTabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+  ["returning", "new", "guest"].forEach(k => $("#who-" + k).hidden = k !== state.who);
+});
+
+$("#placeBtn").addEventListener("click", async () => {
+  const btn = $("#placeBtn"), c = state.cart;
+  if (!c.pizzas.length && !c.drinks.length) return toast("Your order is empty.");
+  btn.disabled = true; btn.textContent = "Placing order…";
+  try {
+    let userId = null;
+    if (state.who === "returning") {
+      userId = +$("#custSelect").value || null;
+      if (!userId) throw new Error("Please choose your name from the list, or pick “I'm new here” / “Continue as guest”.");
+    } else if (state.who === "new") {
+      const f = { name: $("#nName").value.trim(), dine_in_name: $("#nDine").value.trim(), phone_number: $("#nPhone").value.trim(),
+                  address: $("#nAddr").value.trim(), email: $("#nEmail").value.trim() || null, admin: false };
+      if (!f.name || !f.phone_number || !f.address) throw new Error("Please fill in your name, phone and address.");
+      if (!f.dine_in_name) f.dine_in_name = f.name.split(/\s+/)[0];
+      const u = await api("/users", { method: "POST", body: f });
+      state.users.push(u); userId = u.id;
+    }
+    const body = { drinks: c.drinks, pizzas: c.pizzas };
+    if (userId) { body.user_id = userId; localStorage.setItem("luigi.user", userId); }
+    const order = await api("/orders", { method: "POST", body });
+    state.cart = { pizzas: [], drinks: [] }; renderCart(); renderCustomers();
+    $("#trackId").value = "";          // so showView doesn't start a second, banner-less lookup
+    showView("track");
+    $("#trackId").value = order.id;
+    startTracking(order.id, false, true);
+  } catch (e) {
+    toast(e.status === 409 ? "That email is already registered. Use “returning customer” instead." : e.message);
+  } finally { btn.disabled = false; btn.textContent = "Place order"; }
+});
+
+/* ---------- Tracking ---------- */
+const FLOW = [
+  { key: "order_received", label: "Received", icon: "📝" },
+  { key: "preparing", label: "Preparing", icon: "👨‍🍳" },
+  { key: "ready", label: "On its way / Ready", icon: "🛵" },
+  { key: "completed", label: "Completed", icon: "✅" },
+];
+const flowIndex = s => s === "order_received" ? 0 : s === "preparing" ? 1 : s === "completed" ? 3 : 2;
+function orderLines(o) {
+  const out = [];
+  o.pizzas.forEach(l => { const p = pizzaById(l.pizza_id); out.push({
+    t: `${l.quantity} × ${p ? cap(p.size) : "Pizza"} pizza`, s: l.topping_ids.length ? l.topping_ids.map(toppingName).join(", ") : "No extra toppings", p: (p?.price || 0) * l.quantity }); });
+  o.drinks.forEach(l => { const d = drinkById(l.drink_id); out.push({
+    t: `${l.quantity} × ${d ? cap(d.size) + " " + d.name : "Drink"}`, s: "", p: (d?.price || 0) * l.quantity }); });
+  return out;
+}
+const orderTotal = o => orderLines(o).reduce((s, l) => s + l.p, 0);
+const when = iso => new Date(iso).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+
+async function startTracking(id, quiet, justPlaced) {
+  clearInterval(state.trackTimer);
+  await showOrder(id, quiet, justPlaced);
+  state.trackTimer = setInterval(() => { if (!document.hidden) showOrder(id, true); }, 10000);
+}
+async function showOrder(id, quiet, justPlaced) {
+  const box = $("#trackResult");
+  if (!state.menuLoaded) await loadMenu();
+  try {
+    const o = await api("/orders/" + encodeURIComponent(id));
+    const idx = flowIndex(o.status);
+    const label = o.status === "out_for_delivery" ? "Out for delivery" : o.status === "ready_for_pickup" ? "Ready for pickup" : "";
+    const user = o.user_id ? state.users.find(u => u.id === o.user_id) : null;
+    box.innerHTML = `
+      ${justPlaced ? `<div class="banner ok" style="margin-top:16px">🎉 Thanks! Your order is in. <strong>Your order number is #${o.id}</strong>, so keep it handy.</div>` : ""}
+      <h2 style="margin-top:20px">Order #${o.id}</h2>
+      <div class="hint">Placed ${when(o.order_time)}${user ? " · for " + esc(user.name) : " · guest order"}</div>
+      <div class="progress" aria-label="Order progress">${FLOW.map((s, i) => `
+        <div class="st ${i < idx ? "done" : i === idx ? "now" : ""}"><div class="dot">${i <= idx ? s.icon : ""}</div>${i === 2 && label ? label : s.label}</div>`).join("")}</div>
+      <div class="receipt" style="margin-top:20px">${orderLines(o).map(l => `<div class="li"><div>${esc(l.t)}${l.s ? `<small>${esc(l.s)}</small>` : ""}</div><div>${money(l.p)}</div></div>`).join("")}
+        <div class="total"><span>Total</span><span>${money(orderTotal(o))}</span></div></div>`;
+  } catch (e) {
+    clearInterval(state.trackTimer);
+    box.innerHTML = `<div class="banner err" style="margin-top:16px">${e.status === 404 ? `We couldn't find order #${esc(id)}. Double-check the number and try again.` : esc(e.message)}</div>`;
+  }
+}
+$("#trackForm").addEventListener("submit", e => { e.preventDefault(); startTracking($("#trackId").value); });
+
+/* ---------- Staff ---------- */
+const NEXT = {
+  order_received: [["preparing", "Start preparing", ""]],
+  preparing: [["out_for_delivery", "Out for delivery", ""], ["ready_for_pickup", "Ready for pickup", "secondary"]],
+  out_for_delivery: [["completed", "Mark completed", "green"]],
+  ready_for_pickup: [["completed", "Mark completed", "green"]],
+  completed: [],
+};
+async function loadStaff(quiet) {
+  if (!state.menuLoaded) await loadMenu();
+  try {
+    const [orders, inv] = await Promise.all([api("/orders?limit=1000"), api("/inventory?limit=1000")]);
+    state.orders = orders.sort((a, b) => b.id - a.id); state.inventory = inv;
+    renderBoard(); renderInventory();
+  } catch (e) { if (!quiet) toast(e.message); }
+}
+function renderBoard() {
+  const filters = [["active", "Active"], ["order_received", "New"], ["preparing", "Preparing"], ["out_for_delivery", "Out for delivery"], ["ready_for_pickup", "Ready for pickup"], ["completed", "Completed"], ["all", "All"]];
+  const orders = state.orders || [];
+  const counts = k => k === "all" ? orders.length : k === "active" ? orders.filter(o => o.status !== "completed").length : orders.filter(o => o.status === k).length;
+  $("#statusFilter").innerHTML = filters.map(([k, l]) => `<button data-f="${k}" aria-selected="${state.statusFilter === k}">${l} (${counts(k)})</button>`).join("");
+  let list = orders.filter(o => state.statusFilter === "all" ? true : state.statusFilter === "active" ? o.status !== "completed" : o.status === state.statusFilter);
+  const shown = list.slice(0, 60);
+  $("#board").innerHTML = shown.length ? shown.map(o => {
+    const u = o.user_id ? state.users.find(x => x.id === o.user_id) : null;
+    const lines = orderLines(o);
+    return `<article class="order-card"><header><span class="num">#${o.id}</span><span class="badge ${o.status}">${STATUS_LABEL[o.status]}</span></header>
+      <div class="meta">${u ? esc(u.name) + " · " + esc(u.phone_number) : "Guest"} · ${when(o.order_time)}</div>
+      <ul>${lines.map(l => `<li>${esc(l.t)}${l.s ? ` <span class="meta">(${esc(l.s)})</span>` : ""}</li>`).join("")}</ul>
+      <div class="meta">${u ? esc(u.address) : ""}</div>
+      <strong>${money(orderTotal(o))}</strong>
+      <div class="btns">${NEXT[o.status].map(([st, lab, cls]) => `<button class="btn small ${cls}" data-adv="${o.id}" data-to="${st}">${lab}</button>`).join("")}</div></article>`;
+  }).join("") + (list.length > shown.length ? `<div class="meta">Showing the latest ${shown.length} of ${list.length}.</div>` : "")
+    : '<div class="empty card" style="grid-column:1/-1">No orders here. 🎉</div>';
+}
+$("#statusFilter").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (b) { state.statusFilter = b.dataset.f; renderBoard(); } });
+$("#board").addEventListener("click", async e => {
+  const b = e.target.closest("[data-adv]"); if (!b) return;
+  const o = state.orders.find(x => x.id === +b.dataset.adv); b.disabled = true;
+  try {
+    // PUT replaces the whole order, so send everything back with the new status.
+    await api("/orders/" + o.id, { method: "PUT", body: { status: b.dataset.to, user_id: o.user_id, drinks: o.drinks, pizzas: o.pizzas } });
+    toast(`Order #${o.id} → ${STATUS_LABEL[b.dataset.to]}`); loadStaff(true);
+  } catch (err) { toast(err.message); b.disabled = false; }
+});
+$("#staffTabs").addEventListener("click", e => {
+  const b = e.target.closest("[data-st]"); if (!b) return;
+  $$("#staffTabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+  $("#st-orders").hidden = b.dataset.st !== "orders"; $("#st-inventory").hidden = b.dataset.st !== "inventory";
+});
+function renderInventory() {
+  const inv = state.inventory || [];
+  $("#invTable").innerHTML = `<thead><tr><th>Item</th><th>In stock</th><th>Unit</th><th></th></tr></thead><tbody>${inv.map(i => `
+    <tr><td>${esc(i.name)}</td><td><input type="number" step="0.1" min="0" value="${i.quantity}" data-inv="${i.id}" aria-label="${esc(i.name)} quantity"></td>
+    <td>${esc(i.unit)}</td><td>${+i.quantity < 20 && i.unit !== "pieces" ? '<span class="low">Low</span>' : ""}</td></tr>`).join("")}</tbody>`;
+}
+$("#invTable").addEventListener("change", async e => {
+  const inp = e.target.closest("[data-inv]"); if (!inp) return;
+  const item = state.inventory.find(i => i.id === +inp.dataset.inv);
+  const q = Number(inp.value);
+  if (!(q >= 0)) { inp.value = item.quantity; return toast("Enter a quantity of 0 or more."); }
+  try {
+    const upd = await api("/inventory/" + item.id, { method: "PUT", body: { name: item.name, unit: item.unit, quantity: q.toFixed(1) } });
+    item.quantity = upd.quantity; toast(`${item.name} updated`); renderInventory();
+  } catch (err) { inp.value = item.quantity; toast(err.message); }
+});
+
+/* ---------- Init ---------- */
+loadMenu().then(() => {
+  const hash = location.hash.slice(1);
+  if (["track", "staff"].includes(hash)) showView(hash);
+});
+</script>
+</body>
+</html>
