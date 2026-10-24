@@ -9,4 +9,4 @@ Below are the sources for the images used for our pizza types.
 | pizza-garden.jpg | Garden Party — mushrooms, green peppers and onions | [Jake’s Pizza, Northbrook food menu](https://jakespizzanorthbrook.com/food-menu), vegetable pizza photograph |
 | pizza.jpg | Original hero and illustrative custom-pizza fallback | [manoo manoo on Unsplash](https://unsplash.com/photos/iPh0NDrYpzI) |
 
-Credits identify the origin.
+Credits identify the origin in case of copyright.
