@@ -9,7 +9,7 @@
 - **PASS:** all **43 application assets** load through the integrated server; database/source/README/Git routes are inaccessible.
 - **PASS, browser walkthrough:** database-backed Luigi login, branch review, saved closed-shift verification, customer Alex login, pizza customization/cart/checkout, confirmation LP-1057 ($15.00 subtotal, $1.24 tax, $16.24 total, 16 reward points), Sam login, shared order visibility/status advance, own-shift-only screen and missing admin navigation.
 - **PASS, responsive spot checks:** employee My Shifts page at 320, 390, 768 and 1440px had no document-level horizontal overflow. This is not an exhaustive visual audit of every screen.
-- **PASS, final admin layout check:** Order Queue at 320, 768, 1024 and 1440px has no document-level horizontal overflow after the staff-navigation wrapping fix. Tables scroll within their containers. The final preview screenshot is `integration-preview.png`.
+- **PASS, final admin layout check:** Order Queue at 320, 768, 1024 and 1440px has no document-level horizontal overflow after the staff-navigation wrapping fix. Tables scroll within their containers.
 - **PASS, restart walkthrough:** restarted with the documented Python launcher; Luigi login still worked, LP-1057 remained in the shared data, and the dashboard included its $15.00 net revenue (Downtown total $341.00 / 16 orders during the verification session).
 - **Still pending:** full keyboard traversal, screen-reader audit, complete responsive matrix and production load/security tests. Earlier localhost browser failures below describe the original build; current integrated preview is browser-accessible.
 

@@ -72,9 +72,7 @@ backend/api/main.py, auth.py   Team API and cookie authentication
 backend/models.py             Team SQLAlchemy models
 backend/database.py           Team database setup
 backend/seed.py, migrate_*.py  Original team tools, not integration initialization
-backend/index.html            Preserved alternate frontend, not served
 backend/README.md             Original team documentation
-backend/upstream-manifest.json Original file hashes/provenance
 backend/integration.py        Field/ID adapter and transactional commands
 backend/integrated_app.py     Single-origin UI plus /api
 backend/frontend-fixture.json Versioned rules and fictional initial data
@@ -88,7 +86,7 @@ scripts/start.js              Node startup convenience
 scripts/server.js             Original standalone browser-only server
 tests/, backend/test_*.py     Frontend and backend checks
 database/                    Original normalized SQL analysis design
-docs/prototype-reference.md   Preserved original README and Scrum backlog
+docs/backlog.md               Scrum user stories and acceptance criteria
 ```
 
 The adapter maps UI IDs (`LP-1057`, `c1`, `e2`) to numeric team primary keys and maps `order_time`, `user_id`, order junction tables and snake_case statuses to our screen vocabulary. See [integration notes](docs/integration.md).
@@ -124,7 +122,7 @@ Payments, delivery services, notifications, AI responses, estimates and forecast
 
 Legacy API write routes are disabled in the integrated mount to prevent bypassing stock/reward/metadata transactions. Their standalone API and tests remain available. Menu management needs a versioned catalog endpoint rather than direct edits underneath the adapter.
 
-See [requirements](docs/requirements.md), [database analysis](docs/database-design.md), [QA checklist](docs/testing-checklist.md), and [the original Scrum backlog](docs/prototype-reference.md).
+See [requirements](docs/requirements.md), [database analysis](docs/database-design.md), [QA checklist](docs/testing-checklist.md), and [the Scrum backlog](docs/backlog.md). The backlog groups ordering, stock, staff operations and reporting into reviewable user stories with acceptance criteria.
 
 ## Asset credit
 

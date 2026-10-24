@@ -2,9 +2,9 @@
 
 ## Sources
 
-Shared backend files in both supplied ZIPs matched byte-for-byte. The SageZ-jpg branch additionally contained `index.html`. That frontend calls outdated `/users` routes and uses the older PUT status contract, while the included API requires authenticated sessions, CSRF, and PATCH for statuses. It is preserved as `backend/index.html`; our interface is served instead.
+Shared backend files in both supplied ZIPs matched byte-for-byte. The SageZ-jpg branch additionally contained an older frontend that calls outdated `/users` routes and uses the older PUT status contract. The included API requires authenticated sessions, CSRF, and PATCH for statuses. The integrated application serves the root `index.html`; the unused alternate frontend was removed during cleanup.
 
-Original ZIPs are unchanged. `backend/upstream-manifest.json` records original hashes. `backups/frontend-before-integration.zip` preserves the earlier frontend. `backend/README.md` is original team documentation; `docs/prototype-reference.md` preserves ours.
+The original team history remains in Git. `backend/README.md` retains the team's backend documentation; the root README covers the integrated application. Scrum planning is in `docs/backlog.md`. Local ZIP backups are excluded from the repository.
 
 ## Mapping
 
