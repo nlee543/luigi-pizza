@@ -85,7 +85,8 @@ class Order(Base):
         DateTime, nullable=False, server_default=func.current_timestamp(),
     )
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
-    user: Mapped["User | None"] = relationship(back_populates="orders")
+    created_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    user: Mapped["User | None"] = relationship(back_populates="orders", foreign_keys=[user_id])
     order_drinks: Mapped[list[OrderDrink]] = relationship(
         back_populates="order", cascade="all, delete-orphan",
     )
@@ -165,17 +166,29 @@ class Pizza(Base):
 
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = (CheckConstraint("role IN ('customer', 'staff', 'admin')", name="user_role"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    orders: Mapped[list[Order]] = relationship(back_populates="user")
+    orders: Mapped[list[Order]] = relationship(back_populates="user", foreign_keys=[Order.user_id])
     name: Mapped[str] = mapped_column(String, nullable=False)
     address: Mapped[str] = mapped_column(String, nullable=False)
     phone_number: Mapped[str] = mapped_column(String, nullable=False)
     email: Mapped[str | None] = mapped_column(String, unique=True, nullable=True)
     dine_in_name: Mapped[str] = mapped_column(String, nullable=False)
-    admin: Mapped[bool] = mapped_column(
-        Boolean(create_constraint=True, name="admin_boolean"),
-        nullable=False,
-        default=False,
-        server_default=false(),
-    )
+    role: Mapped[str] = mapped_column(String, nullable=False, default="customer", server_default="customer")
+    # Legacy/seed profiles cannot log in until credentials are provisioned.
+    password_hash: Mapped[str | None] = mapped_column(String, nullable=True)
+    must_change_password: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=false())
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="1")
+
+
+class LoginSession(Base):
+    __tablename__ = "login_sessions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    csrf_token: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)

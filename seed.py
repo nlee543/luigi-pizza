@@ -63,7 +63,7 @@ def seed_database(bind: Engine = engine) -> dict[str, int]:
                     phone_number=f"217-555-{100 + i:04d}",
                     email=f"{name.lower().replace(' ', '.')}@example.com",
                     dine_in_name=name.split()[0],
-                    admin=False,
+                    role="customer",
                 )
                 for i, name in enumerate(CUSTOMER_NAMES)
             ]
