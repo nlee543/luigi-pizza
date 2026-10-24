@@ -15,3 +15,6 @@ Luigi-Integrated-Project.zip
 .env
 .env.*
 !.env.example
+*.pyc
+.pytest_temp*/
+deployment.zip
