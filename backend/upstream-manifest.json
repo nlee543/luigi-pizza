@@ -1,0 +1,81 @@
+{
+  "archive": "luigi-pizza-SageZ-jpg-patch-1.zip",
+  "files": [
+    {
+      "file": ".gitignore",
+      "sha256": "bac3227b0158badb1f3deff2dc818caf68d3b679123a6225bd4df98818bbb8dc"
+    },
+    {
+      "file": ".vscode/launch.json",
+      "sha256": "5d8bf84f0f09326dcac53645966af746e8676acfc00e2ed513c001aee4edc17f"
+    },
+    {
+      "file": "README.md",
+      "sha256": "9d7e69d91d8137da943664a5f96ae18c5185a4bcc2e64d6b5fa1566ffa6485ed"
+    },
+    {
+      "file": "api/auth.py",
+      "sha256": "9d00ce932f2bb9b241c92d8f5a15453de606c74fbaa7c0157e4f8ef6b0368ac6"
+    },
+    {
+      "file": "api/main.py",
+      "sha256": "dfddec5f3817687df59fed5ce186a3c356616cbafb106fb112422e81d88140c4"
+    },
+    {
+      "file": "database.py",
+      "sha256": "9ef68b748faa6fd3cfe358a2ab2b65cc10b9199c60448698a82a78ecc4cc9e17"
+    },
+    {
+      "file": "env_sample",
+      "sha256": "92cd03e63558826fb723a3e5893d3dabf39e5ca59b668aa02bbcf103cc5d77a2"
+    },
+    {
+      "file": "index.html",
+      "sha256": "b02458e9db85fcaea23814f7a55c0ed9248de4b1154158748b4b992c2537b007"
+    },
+    {
+      "file": "manage_account.py",
+      "sha256": "2c2430cbea6ec1bdd9f71d6a5e575766a12e388d2ce098763920069529889232"
+    },
+    {
+      "file": "migrate_auth.py",
+      "sha256": "64437252d504868109e058c6d1a2cb3ad611f543ae2f1a2a216cf197b808db7b"
+    },
+    {
+      "file": "migrate_orders.py",
+      "sha256": "02f62fe925b625ba317cb725e7970e4f745a8123f9d18fdf9695e48c9d106da9"
+    },
+    {
+      "file": "models.py",
+      "sha256": "13763bd46cf9a5f1f2a79f7108ee9ec64240e44917c0d92ef23e5e0e18260210"
+    },
+    {
+      "file": "package_deployment.py",
+      "sha256": "90253cce9faa78ed6d1505046e26b37a0a590742130bf530fddcb714ddfbcbd3"
+    },
+    {
+      "file": "requirements.txt",
+      "sha256": "ac2eedc11c87a9c55c2fd0d9df346c57885b10c997c71eae2c8d4f7585c36df5"
+    },
+    {
+      "file": "seed.py",
+      "sha256": "55538a46f0dc4302f1414fc334c353d398a350af33289dffd56377d4dedddd6e"
+    },
+    {
+      "file": "test_api.py",
+      "sha256": "0d8301b4e0223685bc7c391124a8ff5978bfda4bb1c365246a8f23dc657a0baa"
+    },
+    {
+      "file": "test_auth.py",
+      "sha256": "b1fd09d883d109646793b11960c428f3e5daebaa742343d29d61c333ba7de079"
+    },
+    {
+      "file": "test_database.py",
+      "sha256": "b7218e1b2731b87738865bbcd5945a1d88574a3251300ad78bb7b9f232ef6194"
+    },
+    {
+      "file": "test_seed.py",
+      "sha256": "7db578d06b30fbbc268e3fcc107342ebd02028d8dada85c374ba579587a1862b"
+    }
+  ]
+}

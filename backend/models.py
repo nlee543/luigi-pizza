@@ -29,9 +29,8 @@ class OrderDrink(Base):
 
 class OrderPizza(Base):
     __tablename__ = "orders_pizzas"
-    __table_args__ = (
-        UniqueConstraint("order_id", "pizza_id", name="orders_pizzas_unique_pair"),
-    )
+    # Multiple lines of the same size may have different topping combinations.
+    # The legacy API still validates its own one-product-per-order input contract.
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
     order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"), nullable=False)

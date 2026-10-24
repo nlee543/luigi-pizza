@@ -1,0 +1,1347 @@
+{
+  "state": {
+    "version": 1,
+    "branches": [
+      {
+        "id": "downtown",
+        "name": "Downtown",
+        "address": "100 Example Avenue"
+      },
+      {
+        "id": "riverside",
+        "name": "Riverside",
+        "address": "200 Sample Street"
+      }
+    ],
+    "customers": [
+      {
+        "id": "c1",
+        "firstName": "Alex",
+        "lastName": "Morgan",
+        "email": "alex@example.test",
+        "phone": "202-555-0142",
+        "address": {
+          "street": "120 Demo Lane",
+          "city": "Chicago",
+          "state": "IL",
+          "zip": "60601"
+        }
+      },
+      {
+        "id": "c2",
+        "firstName": "Jamie",
+        "lastName": "Rivera",
+        "email": "jamie@example.test",
+        "phone": "202-555-0116",
+        "address": null
+      },
+      {
+        "id": "c3",
+        "firstName": "Casey",
+        "lastName": "Taylor",
+        "email": "casey@example.test",
+        "phone": "202-555-0193",
+        "address": null
+      }
+    ],
+    "ingredients": [
+      {
+        "id": "marinara",
+        "name": "Marinara sauce",
+        "category": "Base",
+        "unit": "cups",
+        "quantity": 48,
+        "reorderLevel": 10,
+        "branchId": "downtown",
+        "lastRestocked": "2026-10-23T20:52:12.913Z",
+        "supplier": "Fictional Fresh Supply"
+      },
+      {
+        "id": "cheese",
+        "name": "Cheese",
+        "category": "Base",
+        "unit": "cups",
+        "quantity": 62,
+        "reorderLevel": 15,
+        "branchId": "downtown",
+        "lastRestocked": "2026-10-23T20:52:12.913Z",
+        "supplier": "Fictional Fresh Supply"
+      },
+      {
+        "id": "pepperoni",
+        "name": "Pepperoni",
+        "category": "Meat",
+        "unit": "cups",
+        "quantity": 16,
+        "reorderLevel": 4,
+        "branchId": "downtown",
+        "lastRestocked": "2026-10-23T20:52:12.913Z",
+        "supplier": "Fictional Fresh Supply"
+      },
+      {
+        "id": "sausage",
+        "name": "Sausage",
+        "category": "Meat",
+        "unit": "cups",
+        "quantity": 3,
+        "reorderLevel": 4,
+        "branchId": "downtown",
+        "lastRestocked": "2026-10-23T20:52:12.913Z",
+        "supplier": "Fictional Fresh Supply"
+      },
+      {
+        "id": "bacon",
+        "name": "Bacon",
+        "category": "Meat",
+        "unit": "cups",
+        "quantity": 18,
+        "reorderLevel": 4,
+        "branchId": "downtown",
+        "lastRestocked": "2026-10-23T20:52:12.913Z",
+        "supplier": "Fictional Fresh Supply"
+      },
+      {
+        "id": "ham",
+        "name": "Ham",
+        "category": "Meat",
+        "unit": "cups",
+        "quantity": 19,
+        "reorderLevel": 4,
+        "branchId": "downtown",
+        "lastRestocked": "2026-10-23T20:52:12.913Z",
+        "supplier": "Fictional Fresh Supply"
+      },
+      {
+        "id": "chicken",
+        "name": "Chicken",
+        "category": "Meat",
+        "unit": "cups",
+        "quantity": 20,
+        "reorderLevel": 4,
+        "branchId": "downtown",
+        "lastRestocked": "2026-10-23T20:52:12.913Z",
+        "supplier": "Fictional Fresh Supply"
+      },
+      {
+        "id": "mushrooms",
+        "name": "Mushrooms",
+        "category": "Vegetables",
+        "unit": "cups",
+        "quantity": 21,
+        "reorderLevel": 4,
+        "branchId": "downtown",
+        "lastRestocked": "2026-10-23T20:52:12.913Z",
+        "supplier": "Fictional Fresh Supply"
+      },
+      {
+        "id": "onions",
+        "name": "Onions",
+        "category": "Vegetables",
+        "unit": "cups",
+        "quantity": 22,
+        "reorderLevel": 4,
+        "branchId": "downtown",
+        "lastRestocked": "2026-10-23T20:52:12.913Z",
+        "supplier": "Fictional Fresh Supply"
+      },
+      {
+        "id": "peppers",
+        "name": "Green peppers",
+        "category": "Vegetables",
+        "unit": "cups",
+        "quantity": 23,
+        "reorderLevel": 4,
+        "branchId": "downtown",
+        "lastRestocked": "2026-10-23T20:52:12.913Z",
+        "supplier": "Fictional Fresh Supply"
+      },
+      {
+        "id": "olives",
+        "name": "Black olives",
+        "category": "Vegetables",
+        "unit": "cups",
+        "quantity": 24,
+        "reorderLevel": 4,
+        "branchId": "downtown",
+        "lastRestocked": "2026-10-23T20:52:12.913Z",
+        "supplier": "Fictional Fresh Supply"
+      },
+      {
+        "id": "jalapenos",
+        "name": "Jalape\u00f1os",
+        "category": "Vegetables",
+        "unit": "cups",
+        "quantity": 0,
+        "reorderLevel": 4,
+        "branchId": "downtown",
+        "lastRestocked": "2026-10-23T20:52:12.913Z",
+        "supplier": "Fictional Fresh Supply"
+      },
+      {
+        "id": "pineapple",
+        "name": "Pineapple",
+        "category": "Vegetables",
+        "unit": "cups",
+        "quantity": 26,
+        "reorderLevel": 4,
+        "branchId": "downtown",
+        "lastRestocked": "2026-10-23T20:52:12.913Z",
+        "supplier": "Fictional Fresh Supply"
+      },
+      {
+        "id": "drink-cola",
+        "name": "Classic cola",
+        "category": "Drinks",
+        "unit": "units",
+        "quantity": 50,
+        "reorderLevel": 10,
+        "branchId": "downtown",
+        "lastRestocked": "2026-10-23T20:52:12.913Z",
+        "supplier": "Demo Beverage Co."
+      },
+      {
+        "id": "drink-lemon",
+        "name": "Lemon-lime soda",
+        "category": "Drinks",
+        "unit": "units",
+        "quantity": 50,
+        "reorderLevel": 10,
+        "branchId": "downtown",
+        "lastRestocked": "2026-10-23T20:52:12.913Z",
+        "supplier": "Demo Beverage Co."
+      },
+      {
+        "id": "drink-tea",
+        "name": "Iced tea",
+        "category": "Drinks",
+        "unit": "units",
+        "quantity": 5,
+        "reorderLevel": 10,
+        "branchId": "downtown",
+        "lastRestocked": "2026-10-23T20:52:12.913Z",
+        "supplier": "Demo Beverage Co."
+      },
+      {
+        "id": "drink-water",
+        "name": "Sparkling water",
+        "category": "Drinks",
+        "unit": "units",
+        "quantity": 50,
+        "reorderLevel": 10,
+        "branchId": "downtown",
+        "lastRestocked": "2026-10-23T20:52:12.913Z",
+        "supplier": "Demo Beverage Co."
+      }
+    ],
+    "employees": [
+      {
+        "id": "e1",
+        "firstName": "Luigi",
+        "lastName": "Demo",
+        "email": "luigi@example.test",
+        "phone": "202-555-0100",
+        "role": "Administrator",
+        "branchId": "downtown",
+        "position": "Manager",
+        "hireDate": "2023-03-01",
+        "status": "Active"
+      },
+      {
+        "id": "e2",
+        "firstName": "Sam",
+        "lastName": "Demo",
+        "email": "sam@example.test",
+        "phone": "202-555-0101",
+        "role": "Branch Employee",
+        "branchId": "downtown",
+        "position": "Kitchen lead",
+        "hireDate": "2024-08-12",
+        "status": "Active"
+      },
+      {
+        "id": "e3",
+        "firstName": "Robin",
+        "lastName": "Demo",
+        "email": "robin@example.test",
+        "phone": "202-555-0102",
+        "role": "Branch Employee",
+        "branchId": "riverside",
+        "position": "Shift lead",
+        "hireDate": "2025-02-04",
+        "status": "Active"
+      }
+    ],
+    "orders": [
+      {
+        "id": "LP-1041",
+        "branchId": "downtown",
+        "customerId": "c1",
+        "customer": {
+          "id": "c1",
+          "firstName": "Alex",
+          "lastName": "Morgan",
+          "email": "alex@example.test",
+          "phone": "202-555-0142",
+          "address": {
+            "street": "120 Demo Lane",
+            "city": "Chicago",
+            "state": "IL",
+            "zip": "60601"
+          }
+        },
+        "items": [
+          {
+            "id": "seed-0",
+            "kind": "pizza",
+            "size": "small",
+            "toppings": [],
+            "quantity": 1,
+            "instructions": ""
+          },
+          {
+            "id": "sd-0",
+            "kind": "drink",
+            "size": "medium",
+            "drinkId": "cola",
+            "quantity": 1
+          }
+        ],
+        "type": "delivery",
+        "payment": "store",
+        "subtotal": 700,
+        "discount": 0,
+        "tax": 58,
+        "delivery": 300,
+        "total": 1058,
+        "createdAt": "2026-10-24T20:10:12.913Z",
+        "estimatedAt": "2026-10-24T20:32:12.913Z",
+        "updatedAt": "2026-10-24T20:11:12.913Z",
+        "status": "Baking",
+        "pointsEarned": 0,
+        "inventoryDeducted": true
+      },
+      {
+        "id": "LP-1042",
+        "branchId": "downtown",
+        "customerId": "c2",
+        "customer": {
+          "id": "c2",
+          "firstName": "Jamie",
+          "lastName": "Rivera",
+          "email": "jamie@example.test",
+          "phone": "202-555-0116",
+          "address": null
+        },
+        "items": [
+          {
+            "id": "seed-1",
+            "kind": "pizza",
+            "size": "medium",
+            "toppings": [
+              "pepperoni"
+            ],
+            "quantity": 2,
+            "instructions": ""
+          },
+          {
+            "id": "sd-1",
+            "kind": "drink",
+            "size": "medium",
+            "drinkId": "cola",
+            "quantity": 1
+          }
+        ],
+        "type": "pickup",
+        "payment": "store",
+        "subtotal": 2000,
+        "discount": 0,
+        "tax": 165,
+        "delivery": 0,
+        "total": 2165,
+        "createdAt": "2026-10-24T20:06:12.913Z",
+        "estimatedAt": "2026-10-24T20:30:12.913Z",
+        "updatedAt": "2026-10-24T20:11:12.913Z",
+        "status": "Preparing",
+        "pointsEarned": 0,
+        "inventoryDeducted": true
+      },
+      {
+        "id": "LP-1043",
+        "branchId": "downtown",
+        "customerId": "c3",
+        "customer": {
+          "id": "c3",
+          "firstName": "Casey",
+          "lastName": "Taylor",
+          "email": "casey@example.test",
+          "phone": "202-555-0193",
+          "address": null
+        },
+        "items": [
+          {
+            "id": "seed-2",
+            "kind": "pizza",
+            "size": "large",
+            "toppings": [],
+            "quantity": 3,
+            "instructions": ""
+          },
+          {
+            "id": "sd-2",
+            "kind": "drink",
+            "size": "medium",
+            "drinkId": "cola",
+            "quantity": 1
+          }
+        ],
+        "type": "pickup",
+        "payment": "store",
+        "subtotal": 2900,
+        "discount": 0,
+        "tax": 239,
+        "delivery": 0,
+        "total": 3139,
+        "createdAt": "2026-10-24T20:02:12.913Z",
+        "estimatedAt": "2026-10-24T20:28:12.913Z",
+        "updatedAt": "2026-10-24T20:11:12.913Z",
+        "status": "Order Received",
+        "pointsEarned": 0,
+        "inventoryDeducted": true
+      },
+      {
+        "id": "LP-1044",
+        "branchId": "downtown",
+        "customerId": "c1",
+        "customer": {
+          "id": "c1",
+          "firstName": "Alex",
+          "lastName": "Morgan",
+          "email": "alex@example.test",
+          "phone": "202-555-0142",
+          "address": {
+            "street": "120 Demo Lane",
+            "city": "Chicago",
+            "state": "IL",
+            "zip": "60601"
+          }
+        },
+        "items": [
+          {
+            "id": "seed-3",
+            "kind": "pizza",
+            "size": "small",
+            "toppings": [
+              "pepperoni"
+            ],
+            "quantity": 4,
+            "instructions": ""
+          },
+          {
+            "id": "sd-3",
+            "kind": "drink",
+            "size": "medium",
+            "drinkId": "cola",
+            "quantity": 1
+          }
+        ],
+        "type": "delivery",
+        "payment": "store",
+        "subtotal": 2600,
+        "discount": 0,
+        "tax": 215,
+        "delivery": 300,
+        "total": 3115,
+        "createdAt": "2026-10-24T19:58:12.913Z",
+        "estimatedAt": "2026-10-24T20:26:12.913Z",
+        "updatedAt": "2026-10-24T20:11:12.913Z",
+        "status": "Quality Check",
+        "pointsEarned": 0,
+        "inventoryDeducted": true
+      },
+      {
+        "id": "LP-1045",
+        "branchId": "downtown",
+        "customerId": "c2",
+        "customer": {
+          "id": "c2",
+          "firstName": "Jamie",
+          "lastName": "Rivera",
+          "email": "jamie@example.test",
+          "phone": "202-555-0116",
+          "address": null
+        },
+        "items": [
+          {
+            "id": "seed-4",
+            "kind": "pizza",
+            "size": "medium",
+            "toppings": [],
+            "quantity": 1,
+            "instructions": ""
+          },
+          {
+            "id": "sd-4",
+            "kind": "drink",
+            "size": "medium",
+            "drinkId": "cola",
+            "quantity": 1
+          }
+        ],
+        "type": "pickup",
+        "payment": "store",
+        "subtotal": 900,
+        "discount": 0,
+        "tax": 74,
+        "delivery": 0,
+        "total": 974,
+        "createdAt": "2026-10-24T19:54:12.913Z",
+        "estimatedAt": "2026-10-24T20:24:12.913Z",
+        "updatedAt": "2026-10-24T20:11:12.913Z",
+        "status": "Ready for Pickup",
+        "pointsEarned": 0,
+        "inventoryDeducted": true
+      },
+      {
+        "id": "LP-1046",
+        "branchId": "downtown",
+        "customerId": "c3",
+        "customer": {
+          "id": "c3",
+          "firstName": "Casey",
+          "lastName": "Taylor",
+          "email": "casey@example.test",
+          "phone": "202-555-0193",
+          "address": null
+        },
+        "items": [
+          {
+            "id": "seed-5",
+            "kind": "pizza",
+            "size": "large",
+            "toppings": [
+              "pepperoni"
+            ],
+            "quantity": 2,
+            "instructions": ""
+          },
+          {
+            "id": "sd-5",
+            "kind": "drink",
+            "size": "medium",
+            "drinkId": "cola",
+            "quantity": 1
+          }
+        ],
+        "type": "pickup",
+        "payment": "store",
+        "subtotal": 2600,
+        "discount": 0,
+        "tax": 215,
+        "delivery": 0,
+        "total": 2815,
+        "createdAt": "2026-10-24T18:32:12.913Z",
+        "estimatedAt": "2026-10-24T19:17:12.913Z",
+        "updatedAt": "2026-10-24T19:17:12.913Z",
+        "status": "Completed",
+        "pointsEarned": 28,
+        "inventoryDeducted": true
+      },
+      {
+        "id": "LP-1047",
+        "branchId": "downtown",
+        "customerId": "c1",
+        "customer": {
+          "id": "c1",
+          "firstName": "Alex",
+          "lastName": "Morgan",
+          "email": "alex@example.test",
+          "phone": "202-555-0142",
+          "address": {
+            "street": "120 Demo Lane",
+            "city": "Chicago",
+            "state": "IL",
+            "zip": "60601"
+          }
+        },
+        "items": [
+          {
+            "id": "seed-6",
+            "kind": "pizza",
+            "size": "small",
+            "toppings": [],
+            "quantity": 3,
+            "instructions": ""
+          },
+          {
+            "id": "sd-6",
+            "kind": "drink",
+            "size": "medium",
+            "drinkId": "cola",
+            "quantity": 1
+          }
+        ],
+        "type": "delivery",
+        "payment": "store",
+        "subtotal": 1700,
+        "discount": 0,
+        "tax": 140,
+        "delivery": 300,
+        "total": 2140,
+        "createdAt": "2026-10-24T18:24:12.913Z",
+        "estimatedAt": "2026-10-24T19:12:12.913Z",
+        "updatedAt": "2026-10-24T19:12:12.913Z",
+        "status": "Completed",
+        "pointsEarned": 18,
+        "inventoryDeducted": true
+      },
+      {
+        "id": "LP-1048",
+        "branchId": "downtown",
+        "customerId": "c2",
+        "customer": {
+          "id": "c2",
+          "firstName": "Jamie",
+          "lastName": "Rivera",
+          "email": "jamie@example.test",
+          "phone": "202-555-0116",
+          "address": null
+        },
+        "items": [
+          {
+            "id": "seed-7",
+            "kind": "pizza",
+            "size": "medium",
+            "toppings": [
+              "pepperoni"
+            ],
+            "quantity": 4,
+            "instructions": ""
+          },
+          {
+            "id": "sd-7",
+            "kind": "drink",
+            "size": "medium",
+            "drinkId": "cola",
+            "quantity": 1
+          }
+        ],
+        "type": "pickup",
+        "payment": "store",
+        "subtotal": 3800,
+        "discount": 0,
+        "tax": 314,
+        "delivery": 0,
+        "total": 4114,
+        "createdAt": "2026-10-24T18:16:12.913Z",
+        "estimatedAt": "2026-10-24T19:07:12.913Z",
+        "updatedAt": "2026-10-24T19:07:12.913Z",
+        "status": "Completed",
+        "pointsEarned": 41,
+        "inventoryDeducted": true
+      },
+      {
+        "id": "LP-1049",
+        "branchId": "downtown",
+        "customerId": "c3",
+        "customer": {
+          "id": "c3",
+          "firstName": "Casey",
+          "lastName": "Taylor",
+          "email": "casey@example.test",
+          "phone": "202-555-0193",
+          "address": null
+        },
+        "items": [
+          {
+            "id": "seed-8",
+            "kind": "pizza",
+            "size": "large",
+            "toppings": [],
+            "quantity": 1,
+            "instructions": ""
+          },
+          {
+            "id": "sd-8",
+            "kind": "drink",
+            "size": "medium",
+            "drinkId": "cola",
+            "quantity": 1
+          }
+        ],
+        "type": "pickup",
+        "payment": "store",
+        "subtotal": 1100,
+        "discount": 0,
+        "tax": 91,
+        "delivery": 0,
+        "total": 1191,
+        "createdAt": "2026-10-24T18:08:12.913Z",
+        "estimatedAt": "2026-10-24T19:02:12.913Z",
+        "updatedAt": "2026-10-24T19:02:12.913Z",
+        "status": "Completed",
+        "pointsEarned": 11,
+        "inventoryDeducted": true
+      },
+      {
+        "id": "LP-1050",
+        "branchId": "downtown",
+        "customerId": "c1",
+        "customer": {
+          "id": "c1",
+          "firstName": "Alex",
+          "lastName": "Morgan",
+          "email": "alex@example.test",
+          "phone": "202-555-0142",
+          "address": {
+            "street": "120 Demo Lane",
+            "city": "Chicago",
+            "state": "IL",
+            "zip": "60601"
+          }
+        },
+        "items": [
+          {
+            "id": "seed-9",
+            "kind": "pizza",
+            "size": "small",
+            "toppings": [
+              "pepperoni"
+            ],
+            "quantity": 2,
+            "instructions": ""
+          },
+          {
+            "id": "sd-9",
+            "kind": "drink",
+            "size": "medium",
+            "drinkId": "cola",
+            "quantity": 1
+          }
+        ],
+        "type": "delivery",
+        "payment": "store",
+        "subtotal": 1400,
+        "discount": 0,
+        "tax": 116,
+        "delivery": 300,
+        "total": 1816,
+        "createdAt": "2026-10-24T18:00:12.913Z",
+        "estimatedAt": "2026-10-24T18:57:12.913Z",
+        "updatedAt": "2026-10-24T18:57:12.913Z",
+        "status": "Completed",
+        "pointsEarned": 15,
+        "inventoryDeducted": true
+      },
+      {
+        "id": "LP-1051",
+        "branchId": "downtown",
+        "customerId": "c2",
+        "customer": {
+          "id": "c2",
+          "firstName": "Jamie",
+          "lastName": "Rivera",
+          "email": "jamie@example.test",
+          "phone": "202-555-0116",
+          "address": null
+        },
+        "items": [
+          {
+            "id": "seed-10",
+            "kind": "pizza",
+            "size": "medium",
+            "toppings": [],
+            "quantity": 3,
+            "instructions": ""
+          },
+          {
+            "id": "sd-10",
+            "kind": "drink",
+            "size": "medium",
+            "drinkId": "cola",
+            "quantity": 1
+          }
+        ],
+        "type": "pickup",
+        "payment": "store",
+        "subtotal": 2300,
+        "discount": 0,
+        "tax": 190,
+        "delivery": 0,
+        "total": 2490,
+        "createdAt": "2026-10-24T17:52:12.913Z",
+        "estimatedAt": "2026-10-24T18:52:12.913Z",
+        "updatedAt": "2026-10-24T18:52:12.913Z",
+        "status": "Completed",
+        "pointsEarned": 24,
+        "inventoryDeducted": true
+      },
+      {
+        "id": "LP-1052",
+        "branchId": "downtown",
+        "customerId": "c3",
+        "customer": {
+          "id": "c3",
+          "firstName": "Casey",
+          "lastName": "Taylor",
+          "email": "casey@example.test",
+          "phone": "202-555-0193",
+          "address": null
+        },
+        "items": [
+          {
+            "id": "seed-11",
+            "kind": "pizza",
+            "size": "large",
+            "toppings": [
+              "pepperoni"
+            ],
+            "quantity": 4,
+            "instructions": ""
+          },
+          {
+            "id": "sd-11",
+            "kind": "drink",
+            "size": "medium",
+            "drinkId": "cola",
+            "quantity": 1
+          }
+        ],
+        "type": "pickup",
+        "payment": "store",
+        "subtotal": 5000,
+        "discount": 0,
+        "tax": 413,
+        "delivery": 0,
+        "total": 5413,
+        "createdAt": "2026-10-24T17:44:12.913Z",
+        "estimatedAt": "2026-10-24T18:47:12.913Z",
+        "updatedAt": "2026-10-24T18:47:12.913Z",
+        "status": "Completed",
+        "pointsEarned": 54,
+        "inventoryDeducted": true
+      },
+      {
+        "id": "LP-1053",
+        "branchId": "downtown",
+        "customerId": "c1",
+        "customer": {
+          "id": "c1",
+          "firstName": "Alex",
+          "lastName": "Morgan",
+          "email": "alex@example.test",
+          "phone": "202-555-0142",
+          "address": {
+            "street": "120 Demo Lane",
+            "city": "Chicago",
+            "state": "IL",
+            "zip": "60601"
+          }
+        },
+        "items": [
+          {
+            "id": "seed-12",
+            "kind": "pizza",
+            "size": "small",
+            "toppings": [],
+            "quantity": 1,
+            "instructions": ""
+          },
+          {
+            "id": "sd-12",
+            "kind": "drink",
+            "size": "medium",
+            "drinkId": "cola",
+            "quantity": 1
+          }
+        ],
+        "type": "delivery",
+        "payment": "store",
+        "subtotal": 700,
+        "discount": 0,
+        "tax": 58,
+        "delivery": 300,
+        "total": 1058,
+        "createdAt": "2026-10-24T17:36:12.913Z",
+        "estimatedAt": "2026-10-24T18:42:12.913Z",
+        "updatedAt": "2026-10-24T18:42:12.913Z",
+        "status": "Completed",
+        "pointsEarned": 7,
+        "inventoryDeducted": true
+      },
+      {
+        "id": "LP-1054",
+        "branchId": "downtown",
+        "customerId": "c2",
+        "customer": {
+          "id": "c2",
+          "firstName": "Jamie",
+          "lastName": "Rivera",
+          "email": "jamie@example.test",
+          "phone": "202-555-0116",
+          "address": null
+        },
+        "items": [
+          {
+            "id": "seed-13",
+            "kind": "pizza",
+            "size": "medium",
+            "toppings": [
+              "pepperoni"
+            ],
+            "quantity": 2,
+            "instructions": ""
+          },
+          {
+            "id": "sd-13",
+            "kind": "drink",
+            "size": "medium",
+            "drinkId": "cola",
+            "quantity": 1
+          }
+        ],
+        "type": "pickup",
+        "payment": "store",
+        "subtotal": 2000,
+        "discount": 0,
+        "tax": 165,
+        "delivery": 0,
+        "total": 2165,
+        "createdAt": "2026-10-24T17:28:12.913Z",
+        "estimatedAt": "2026-10-24T18:37:12.913Z",
+        "updatedAt": "2026-10-24T18:37:12.913Z",
+        "status": "Completed",
+        "pointsEarned": 21,
+        "inventoryDeducted": true
+      },
+      {
+        "id": "LP-1055",
+        "branchId": "downtown",
+        "customerId": "c3",
+        "customer": {
+          "id": "c3",
+          "firstName": "Casey",
+          "lastName": "Taylor",
+          "email": "casey@example.test",
+          "phone": "202-555-0193",
+          "address": null
+        },
+        "items": [
+          {
+            "id": "seed-14",
+            "kind": "pizza",
+            "size": "large",
+            "toppings": [],
+            "quantity": 3,
+            "instructions": ""
+          },
+          {
+            "id": "sd-14",
+            "kind": "drink",
+            "size": "medium",
+            "drinkId": "cola",
+            "quantity": 1
+          }
+        ],
+        "type": "pickup",
+        "payment": "store",
+        "subtotal": 2900,
+        "discount": 0,
+        "tax": 239,
+        "delivery": 0,
+        "total": 3139,
+        "createdAt": "2026-10-24T17:20:12.913Z",
+        "estimatedAt": "2026-10-24T18:32:12.913Z",
+        "updatedAt": "2026-10-24T18:32:12.913Z",
+        "status": "Completed",
+        "pointsEarned": 31,
+        "inventoryDeducted": true
+      },
+      {
+        "id": "LP-1056",
+        "branchId": "riverside",
+        "customerId": "c1",
+        "customer": {
+          "id": "c1",
+          "firstName": "Alex",
+          "lastName": "Morgan",
+          "email": "alex@example.test",
+          "phone": "202-555-0142",
+          "address": {
+            "street": "120 Demo Lane",
+            "city": "Chicago",
+            "state": "IL",
+            "zip": "60601"
+          }
+        },
+        "items": [
+          {
+            "id": "seed-15",
+            "kind": "pizza",
+            "size": "small",
+            "toppings": [
+              "pepperoni"
+            ],
+            "quantity": 4,
+            "instructions": ""
+          },
+          {
+            "id": "sd-15",
+            "kind": "drink",
+            "size": "medium",
+            "drinkId": "cola",
+            "quantity": 1
+          }
+        ],
+        "type": "delivery",
+        "payment": "store",
+        "subtotal": 2600,
+        "discount": 0,
+        "tax": 215,
+        "delivery": 300,
+        "total": 3115,
+        "createdAt": "2026-10-24T17:12:12.913Z",
+        "estimatedAt": "2026-10-24T18:27:12.913Z",
+        "updatedAt": "2026-10-24T18:27:12.913Z",
+        "status": "Completed",
+        "pointsEarned": 28,
+        "inventoryDeducted": true
+      }
+    ],
+    "salesHistory": [
+      {
+        "date": "2026-10-11",
+        "orders": 36,
+        "revenueCents": 65000
+      },
+      {
+        "date": "2026-10-12",
+        "orders": 53,
+        "revenueCents": 72933
+      },
+      {
+        "date": "2026-10-13",
+        "orders": 42,
+        "revenueCents": 80866
+      },
+      {
+        "date": "2026-10-14",
+        "orders": 59,
+        "revenueCents": 88799
+      },
+      {
+        "date": "2026-10-15",
+        "orders": 48,
+        "revenueCents": 96732
+      },
+      {
+        "date": "2026-10-16",
+        "orders": 37,
+        "revenueCents": 104665
+      },
+      {
+        "date": "2026-10-17",
+        "orders": 54,
+        "revenueCents": 112598
+      },
+      {
+        "date": "2026-10-18",
+        "orders": 43,
+        "revenueCents": 120531
+      },
+      {
+        "date": "2026-10-19",
+        "orders": 60,
+        "revenueCents": 128464
+      },
+      {
+        "date": "2026-10-20",
+        "orders": 49,
+        "revenueCents": 71397
+      },
+      {
+        "date": "2026-10-21",
+        "orders": 38,
+        "revenueCents": 79330
+      },
+      {
+        "date": "2026-10-22",
+        "orders": 55,
+        "revenueCents": 87263
+      },
+      {
+        "date": "2026-10-23",
+        "orders": 44,
+        "revenueCents": 95196
+      },
+      {
+        "date": "2026-10-24",
+        "orders": 61,
+        "revenueCents": 103129
+      }
+    ],
+    "cart": [],
+    "currentCustomerId": "c1",
+    "staffEmployeeId": "e1",
+    "branchId": "downtown",
+    "lastOrderId": null,
+    "rewards": {
+      "c1": 160,
+      "c2": 78,
+      "c3": 23
+    },
+    "rewardTransactions": [],
+    "promotions": [
+      {
+        "id": "WELCOME5",
+        "name": "A little welcome",
+        "description": "$5 off an order of $20 or more. Use code WELCOME5.",
+        "discountType": "fixed",
+        "discountValue": 500,
+        "minSubtotal": 2000,
+        "requiredPoints": 0,
+        "start": "2026-01-01",
+        "end": "2027-12-31",
+        "active": true
+      },
+      {
+        "id": "REWARD5",
+        "name": "Your next slice of joy",
+        "description": "Redeem 100 points for $5 off.",
+        "discountType": "fixed",
+        "discountValue": 500,
+        "minSubtotal": 500,
+        "requiredPoints": 100,
+        "start": "2026-01-01",
+        "end": "2027-12-31",
+        "active": true
+      }
+    ],
+    "selectedPromotion": null,
+    "shifts": [
+      {
+        "id": "sh1",
+        "employeeId": "e2",
+        "branchId": "downtown",
+        "clockIn": "2026-10-24T17:12:12.913Z",
+        "clockOut": null
+      },
+      {
+        "id": "sh2",
+        "employeeId": "e1",
+        "branchId": "downtown",
+        "clockIn": "2026-10-24T12:12:12.913Z",
+        "clockOut": "2026-10-24T19:12:12.913Z"
+      },
+      {
+        "id": "sh3",
+        "employeeId": "e3",
+        "branchId": "riverside",
+        "clockIn": "2026-10-24T16:12:12.913Z",
+        "clockOut": null
+      }
+    ],
+    "tickets": [
+      {
+        "id": "TK-1001",
+        "customerId": "c2",
+        "customerName": "Jamie Rivera",
+        "orderId": "LP-1051",
+        "category": "Order issue",
+        "description": "A topping was missing.",
+        "summary": "Customer requested help with missing pepperoni.",
+        "createdAt": "2026-10-24T19:02:12.913Z",
+        "status": "Escalated",
+        "messages": [
+          {
+            "role": "customer",
+            "text": "A topping was missing."
+          }
+        ]
+      }
+    ],
+    "chat": [
+      {
+        "role": "assistant",
+        "text": "Hi, I\u2019m Luigi\u2019s automated demo assistant. Ask me about the menu, rewards, or your order. A representative is always one click away."
+      }
+    ]
+  },
+  "sizes": {
+    "small": {
+      "name": "Small",
+      "diameter": 8,
+      "baseCents": 500,
+      "toppingCents": 100,
+      "portionCups": 0.25,
+      "drinkCents": 100
+    },
+    "medium": {
+      "name": "Medium",
+      "diameter": 12,
+      "baseCents": 700,
+      "toppingCents": 200,
+      "portionCups": 0.5,
+      "drinkCents": 200
+    },
+    "large": {
+      "name": "Large",
+      "diameter": 14,
+      "baseCents": 900,
+      "toppingCents": 300,
+      "portionCups": 1,
+      "drinkCents": 300
+    }
+  },
+  "toppings": [
+    {
+      "id": "pepperoni",
+      "name": "Pepperoni",
+      "category": "Meat",
+      "ingredientId": "pepperoni",
+      "portions": {
+        "small": 0.125,
+        "medium": 0.25,
+        "large": 0.5
+      }
+    },
+    {
+      "id": "sausage",
+      "name": "Sausage",
+      "category": "Meat",
+      "ingredientId": "sausage",
+      "portions": {
+        "small": 0.125,
+        "medium": 0.25,
+        "large": 0.5
+      }
+    },
+    {
+      "id": "bacon",
+      "name": "Bacon",
+      "category": "Meat",
+      "ingredientId": "bacon",
+      "portions": {
+        "small": 0.125,
+        "medium": 0.25,
+        "large": 0.5
+      }
+    },
+    {
+      "id": "ham",
+      "name": "Ham",
+      "category": "Meat",
+      "ingredientId": "ham",
+      "portions": {
+        "small": 0.125,
+        "medium": 0.25,
+        "large": 0.5
+      }
+    },
+    {
+      "id": "chicken",
+      "name": "Chicken",
+      "category": "Meat",
+      "ingredientId": "chicken",
+      "portions": {
+        "small": 0.125,
+        "medium": 0.25,
+        "large": 0.5
+      }
+    },
+    {
+      "id": "mushrooms",
+      "name": "Mushrooms",
+      "category": "Vegetables",
+      "ingredientId": "mushrooms",
+      "portions": {
+        "small": 0.125,
+        "medium": 0.25,
+        "large": 0.5
+      }
+    },
+    {
+      "id": "onions",
+      "name": "Onions",
+      "category": "Vegetables",
+      "ingredientId": "onions",
+      "portions": {
+        "small": 0.125,
+        "medium": 0.25,
+        "large": 0.5
+      }
+    },
+    {
+      "id": "peppers",
+      "name": "Green peppers",
+      "category": "Vegetables",
+      "ingredientId": "peppers",
+      "portions": {
+        "small": 0.125,
+        "medium": 0.25,
+        "large": 0.5
+      }
+    },
+    {
+      "id": "olives",
+      "name": "Black olives",
+      "category": "Vegetables",
+      "ingredientId": "olives",
+      "portions": {
+        "small": 0.125,
+        "medium": 0.25,
+        "large": 0.5
+      }
+    },
+    {
+      "id": "jalapenos",
+      "name": "Jalape\u00f1os",
+      "category": "Vegetables",
+      "ingredientId": "jalapenos",
+      "portions": {
+        "small": 0.125,
+        "medium": 0.25,
+        "large": 0.5
+      }
+    },
+    {
+      "id": "pineapple",
+      "name": "Pineapple",
+      "category": "Vegetables",
+      "ingredientId": "pineapple",
+      "portions": {
+        "small": 0.125,
+        "medium": 0.25,
+        "large": 0.5
+      }
+    },
+    {
+      "id": "extra-cheese",
+      "name": "Extra cheese",
+      "category": "Cheese",
+      "ingredientId": "cheese",
+      "portions": {
+        "small": 0.125,
+        "medium": 0.25,
+        "large": 0.5
+      }
+    }
+  ],
+  "drinks": [
+    {
+      "id": "cola",
+      "name": "Classic cola"
+    },
+    {
+      "id": "lemon",
+      "name": "Lemon-lime soda"
+    },
+    {
+      "id": "tea",
+      "name": "Iced tea"
+    },
+    {
+      "id": "water",
+      "name": "Sparkling water"
+    }
+  ]
+}

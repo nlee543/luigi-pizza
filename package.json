@@ -3,5 +3,5 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "scripts": { "start": "node scripts/server.js" }
+  "scripts": { "start": "node scripts/start.js", "start:standalone": "node scripts/server.js", "test": "node --test tests/*.test.js", "test:database": "python scripts/check_database.py" }
 }

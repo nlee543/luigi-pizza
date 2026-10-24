@@ -384,15 +384,15 @@ def test_removing_link_preserves_shared_pizza(engine, pizza):
         assert pizza.orders == [second.order]
 
 
-def test_duplicate_order_pizza_rejected(engine, pizza):
+def test_same_size_pizza_lines_allowed_for_distinct_customizations(engine, pizza):
     with Session(engine) as session:
         order = Order(order_pizzas=[
             OrderPizza(quantity=1, pizza=pizza),
             OrderPizza(quantity=1, pizza=pizza),
         ])
         session.add(order)
-        with pytest.raises(IntegrityError, match="UNIQUE"):
-            session.commit()
+        session.commit()
+        assert len(order.order_pizzas) == 2
 
 
 
