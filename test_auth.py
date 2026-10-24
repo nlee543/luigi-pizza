@@ -132,6 +132,25 @@ def test_csrf_and_origin_checks(client):
                        headers={'X-CSRF-Protection': '1', 'Origin': 'https://evil.example'}).status_code == 403
 
 
+@pytest.mark.parametrize('use_environment', [True, False])
+def test_multiple_allowed_origins(monkeypatch, use_environment):
+    origins = ' https://api.example.com/ , http://127.0.0.1:8000 , , '
+    monkeypatch.setenv('APP_ORIGIN', origins if use_environment else 'https://other.example')
+    app = create_app('sqlite://', cookie_secure=False,
+                     allowed_origin=None if use_environment else origins)
+    with TestClient(app) as browser:
+        for origin in ['https://api.example.com', 'http://127.0.0.1:8000']:
+            # Passing the origin guard reaches the login header guard.
+            response = browser.post('/auth/login', headers={'Origin': origin})
+            assert response.status_code == 403
+            assert response.json()['detail'] == 'Send X-CSRF-Protection: 1.'
+        for origin in ['https://evil.example', 'https://api.example.com.evil.example',
+                       'http://api.example.com', 'http://127.0.0.1:8001', 'null']:
+            response = browser.post('/auth/login', headers={'Origin': origin})
+            assert response.status_code == 403
+            assert response.json()['detail'] == 'Request origin is not allowed.'
+
+
 def test_login_rotation_logout_and_hashed_sessions(client):
     old_cookie = client.cookies.get(COOKIE_NAME)
     login(client)

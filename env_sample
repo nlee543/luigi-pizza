@@ -2,4 +2,5 @@
 CONNECTIONSTRING=sqlite:///file_name.db
 # Local HTTP development only. Use true (the default) when serving over HTTPS.
 COOKIE_SECURE=false
+# Comma-separated browser origins (scheme, host, and port; no URL paths).
 APP_ORIGIN=http://127.0.0.1:8000

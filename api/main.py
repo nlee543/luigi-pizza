@@ -232,7 +232,11 @@ def create_app(connection_string=None, *, cookie_secure=None, allowed_origin=Non
 
     app = FastAPI(title="Luigi's Pizza API", lifespan=lifespan)
     app.state.cookie_secure = cookie_secure if cookie_secure is not None else os.getenv("COOKIE_SECURE", "true").lower() == "true"
-    app.state.allowed_origin = (allowed_origin or os.getenv("APP_ORIGIN", "http://127.0.0.1:8000")).rstrip("/")
+    app.state.allowed_origins = {
+        origin.strip().rstrip("/")
+        for origin in (allowed_origin or os.getenv("APP_ORIGIN", "http://127.0.0.1:8000")).split(",")
+        if origin.strip()
+    }
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request: Request, exc: RequestValidationError):
@@ -244,7 +248,7 @@ def create_app(connection_string=None, *, cookie_secure=None, allowed_origin=Non
     async def browser_security(request: Request, call_next):
         if request.method not in {"GET", "HEAD", "OPTIONS"}:
             origin = request.headers.get("origin")
-            if origin and origin != app.state.allowed_origin:
+            if origin and origin not in app.state.allowed_origins:
                 return JSONResponse({"detail": "Request origin is not allowed."}, status_code=403)
         response = await call_next(request)
         # Authenticated responses contain private customer/order data.

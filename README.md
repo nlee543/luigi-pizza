@@ -345,8 +345,10 @@ $env:APP_ORIGIN = "http://127.0.0.1:8000"
 
 Environment files are examples; the application does not automatically load `.env`.
 `CONNECTIONSTRING` must be a SQLite SQLAlchemy URL. The database parent directory must
-already exist. Serve the eventual UI on the same origin, and set `APP_ORIGIN` to that
-exact origin (scheme, host, and port). CORS is not enabled. Use `COOKIE_SECURE=true`
+already exist. Serve the eventual UI on the same origin, and set `APP_ORIGIN` to the
+allowed browser origin(s), separated by commas (scheme, host, and port; no URL paths).
+For example: `APP_ORIGIN=https://api.example.com,http://127.0.0.1:8000`.
+Whitespace and trailing slashes are ignored. CORS is not enabled. Use `COOKIE_SECURE=true`
 and HTTPS outside local development.
 
 ### Endpoint permissions
@@ -387,7 +389,7 @@ in this version; staff can correct order items.
   The database stores a SHA-256 hash of the random token, not the cookie value.
 - Authenticated POST/PUT/PATCH/DELETE requests require the cookie **and** the
   `X-CSRF-Token` value returned by login or `/auth/me`.
-- If an `Origin` header is present on a write, it must match `APP_ORIGIN`. Command-line
+- If an `Origin` header is present on a write, it must match an entry in `APP_ORIGIN`. Command-line
   clients may omit Origin; they must still send the required CSRF headers.
 - Sessions expire after 8 hours or 30 minutes of inactivity. Login rotates the browser's
   prior session. Logout, password changes, and account access changes revoke sessions.
