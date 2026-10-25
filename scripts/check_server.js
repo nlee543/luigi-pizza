@@ -1,4 +1,4 @@
-// Verify the live static server and the complete module graph without a browser.
+// Verifies the live server and the complete module graph without a browser.
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 const origin = process.env.PREVIEW_URL || 'http://127.0.0.1:5173';
