@@ -1,6 +1,8 @@
 # Luigi’s Pizzeria — integrated team application
 
-Our HTML/CSS/vanilla-JavaScript interface now runs with the team’s **FastAPI + SQLAlchemy + SQLite backend**. Original ZIPs are untouched. A pre-integration frontend backup is in `backups/frontend-before-integration.zip`.
+This branch connects our HTML, CSS, and vanilla JavaScript website to the team’s **FastAPI, SQLAlchemy, and SQLite backend**. Customers can place orders, and staff can manage them through the same saved database. The original ZIP files and local backups are not included in this repository.
+
+The team’s backend files are in `backend/`. The integration added an API client to the website, a Python adapter for the website’s fields, and storage for features such as shifts and rewards. The team’s original documentation remains in `backend/README.md`; use this README to run the combined application.
 
 ## Run the integrated application
 
@@ -72,7 +74,7 @@ backend/api/main.py, auth.py   Team API and cookie authentication
 backend/models.py             Team SQLAlchemy models
 backend/database.py           Team database setup
 backend/seed.py, migrate_*.py  Original team tools, not integration initialization
-backend/README.md             Original team documentation
+backend/README.md             Original team documentation, retained for reference
 backend/integration.py        Field/ID adapter and transactional commands
 backend/integrated_app.py     Single-origin UI plus /api
 backend/frontend-fixture.json Versioned rules and fictional initial data
@@ -87,9 +89,18 @@ scripts/server.js             Original standalone browser-only server
 tests/, backend/test_*.py     Frontend and backend checks
 database/                    Original normalized SQL analysis design
 docs/backlog.md               Scrum user stories and acceptance criteria
+docs/runtime-database.md      Current database diagram and integration storage
 ```
 
 The adapter maps UI IDs (`LP-1057`, `c1`, `e2`) to numeric team primary keys and maps `order_time`, `user_id`, order junction tables and snake_case statuses to our screen vocabulary. See [integration notes](docs/integration.md).
+
+## Current database design
+
+The [current database diagram](docs/runtime-database.md) shows the tables used by this branch, including the added `ui_workspace` table. It follows `backend/models.py` and the workspace model in `backend/integration.py`.
+
+The integration removed the unique order/pizza pair constraint so an order can contain two pizzas of the same size with different toppings. Drink selections and topping selections still have their original pair constraints. Branches, shifts, rewards, promotions, and support records are stored in the workspace document and linked to the team’s records through application-managed IDs.
+
+The diagram in the team’s original `backend/README.md` remains historical reference. Its statement that an order/pizza pair must be unique does not apply to this branch. The separate [30-table SQL design](docs/database-design.md) is an analysis document, not the schema used by the running application.
 
 ## Tests
 
@@ -112,7 +123,7 @@ Python tests use temporary databases, not the running demo database. They cover 
 
 `node scripts/server.js` or `npm run start:standalone` serves the original localStorage presentation at port 5173. It does **not** connect to Python. Use port 5174 to demonstrate backend persistence.
 
-`database/schema.sql` and `seed.sql` retain the separate 30-table normalized analysis design. They are **not** the active integrated schema. Runtime uses the team's models plus an additive `ui_workspace` table for features absent from their schema. Future work should normalize that document into dedicated branch/shift/reward/promotion/support tables. Never load the reference SQL into the team database or apply legacy migrations blindly.
+`database/schema.sql` and `database/seed.sql` retain the separate 30-table normalized analysis design. They are **not** the active integrated schema. Runtime uses the team's models plus an added `ui_workspace` table for features absent from their schema. Future work should move the workspace records into dedicated branch, shift, reward, promotion, and support tables. Do not load the reference SQL into the integrated database or run older migrations without checking compatibility.
 
 ## Accessibility and limits
 

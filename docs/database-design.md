@@ -1,6 +1,6 @@
 # Relational database design
 
-> This document describes the original 30-table normalized SQL analysis design, not the current integrated runtime schema. The integrated application uses the team's SQLAlchemy tables plus a `ui_workspace` extension table. See `integration.md` for mappings, transactions and the future normalization plan. Do not load the reference schema into the integrated database.
+> This document describes the original 30-table normalized SQL analysis design, not the current integrated runtime schema. See the [current database diagram](runtime-database.md) for the eleven tables used by the integrated application and the [integration notes](integration.md) for mappings and transactions. Do not load the reference schema into the integrated database.
 
 ## Conventions and normalization
 
