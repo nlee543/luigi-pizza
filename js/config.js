@@ -1,4 +1,4 @@
-// All money is integer cents; recipes use cups or units, never prices.
+// Money is universally an integer; recipes use units, never prices (integers).
 export const CONFIG = Object.freeze({
   taxRate: 0.0825,
   deliveryFeeCents: 300,
