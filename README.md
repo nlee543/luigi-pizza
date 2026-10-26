@@ -4,7 +4,31 @@ This branch connects our HTML, CSS, and vanilla JavaScript website to the team�
 
 The team’s backend files are in `backend/`. The integration added an API client to the website, a Python adapter for the website’s fields, and storage for features such as shifts and rewards. The team’s original documentation remains in `backend/README.md`; use this README to run the combined application.
 
-## Run the integrated application
+## Live website
+
+The class demo is hosted at **[pizzabyluigi.duckdns.org](https://pizzabyluigi.duckdns.org/)**. You can use that link without installing anything on your computer. It is a demonstration site with fictional data; payments and automated support replies are simulated.
+
+The hosted copy runs on a Google Cloud Compute Engine VM using Debian 13. DuckDNS points the domain to the VM's external IP. Nginx accepts HTTPS requests and forwards them to the Python application on `127.0.0.1:5174`. Certbot manages the HTTPS certificate, and a systemd service named `luigi-pizza` starts the app when the VM boots and keeps it running after SSH is closed.
+
+The VM stores its SQLite database at `backend/luigi_pizza.db` inside the deployed project. That database is separate from databases created on our own computers. Orders, accounts, inventory, and shifts entered on the hosted site stay with the hosted copy; they are not synced through GitHub. Stopping the VM takes the site offline but does not erase its persistent disk. If its external IP changes, the DuckDNS record must be updated.
+
+Pushing a commit to GitHub does **not** automatically update the hosted site. Deployment is manual: update the VM's project copy, preserve its database and hosting settings, install changed dependencies if needed, and restart the service. The VM's Nginx, Certbot, and systemd configurations are managed on the VM and are not included in this repository.
+
+### Hosted configuration and local defaults
+
+The hosted service uses `APP_ORIGIN=https://pizzabyluigi.duckdns.org`. Secure cookies were enabled in the VM's copy of `backend/integrated_app.py` by setting `cookie_secure=True`. The repository retains `cookie_secure=False` for local HTTP development. These VM-specific settings must be preserved when deploying updates; downloading this branch alone does not reproduce the HTTPS setup.
+
+To check or restart the existing deployment from the VM's SSH terminal:
+
+```bash
+sudo systemctl status luigi-pizza --no-pager
+sudo journalctl -u luigi-pizza -n 40 --no-pager
+sudo systemctl restart luigi-pizza
+```
+
+The first two commands show service status and recent logs. The third restarts the application and briefly interrupts requests. HTTPS is one part of the hosting setup; this remains a class demo rather than a production restaurant service.
+
+## Run the integrated application locally
 
 From this project folder in PowerShell:
 
@@ -24,11 +48,11 @@ py -3 -m venv .venv
 
 On macOS/Linux use `python3 -m venv .venv` and `.venv/bin/python`. Set `PORT` before launching to change ports; the launcher configures matching local allowed origins. No frontend build/install is required.
 
-First startup creates `backend/luigi_pizza.db` with fictional data. Later restarts preserve orders, stock, rewards, profiles, shifts, verification, promotions and tickets. No real data has been imported. Legacy browser-only orders remain in the standalone demo and are not silently imported. This server is loopback-only and configured for local HTTP, not public deployment.
+First startup creates `backend/luigi_pizza.db` with fictional data. Later restarts preserve orders, stock, rewards, profiles, shifts, verification, promotions and tickets. No real data has been imported. Legacy browser-only orders remain in the standalone demo and are not silently imported. The launcher listens only on loopback and uses local HTTP by default. On the hosted VM, Nginx provides public HTTPS access to that local application, as described above.
 
 ## Demonstration logins
 
-Intentionally public **local demo credentials**, not production secrets. Passwords are stored as Argon2 hashes in the database.
+These are intentionally public **seeded demo credentials**, not production secrets. They apply to a newly initialized demo database; account changes in the hosted database do not update this table. Passwords are stored as Argon2 hashes in the database.
 
 | Account | Login screen | Username/email | Password |
 |---|---|---|---|
@@ -129,7 +153,7 @@ Python tests use temporary databases, not the running demo database. They cover 
 
 Semantic landmarks, labels, focus handling, native dialogs, validation summaries, chart data tables, live messages, reduced motion and responsive layouts are retained. WCAG 2.2 AA is a target requiring a full audit, not a certification.
 
-Payments, delivery services, notifications, AI responses, estimates and forecasts remain demonstrations. The database and authentication are real local implementations. Public hosting needs HTTPS/secure cookies, private credentials, rate limits, monitoring, backups, capacity tests and review. The extension uses a serialized SQLite JSON workspace, suitable for this class demo rather than high-volume production. API response pagination and normalized extension storage remain future work.
+Payments, delivery services, notifications, AI responses, estimates and forecasts remain demonstrations. The database and authentication run on the server. The hosted class demo uses HTTPS; production use would also require private credentials, rate limits, monitoring, verified backups, capacity tests and further review. The extension uses a serialized SQLite JSON workspace, suitable for this class demo rather than high-volume production. API response pagination and normalized extension storage remain future work.
 
 Legacy API write routes are disabled in the integrated mount to prevent bypassing stock/reward/metadata transactions. Their standalone API and tests remain available. Menu management needs a versioned catalog endpoint rather than direct edits underneath the adapter.
 
