@@ -1,4 +1,4 @@
-# Luigi’s Pizzeria — integrated team application
+# Luigi’s Pizzeria — What's Behind The Application
 
 This branch connects our HTML, CSS, and vanilla JavaScript website to the team’s **FastAPI, SQLAlchemy, and SQLite backend**. Customers can place orders, and staff can manage them through the same saved database. The original ZIP files and local backups are not included in this repository.
 
